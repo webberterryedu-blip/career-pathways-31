@@ -3725,7 +3725,7 @@ You said:
       "command": "cmd",
       "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-github@latest"],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_TOKEN_HERE"
       },
       "disabled": true,
       "autoApprove": []
