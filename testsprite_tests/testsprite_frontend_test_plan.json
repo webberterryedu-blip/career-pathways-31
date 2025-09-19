@@ -1,0 +1,450 @@
+[
+  {
+    "id": "TC001",
+    "title": "Successful instructor login via Supabase Auth",
+    "description": "Verify that an instructor can log in successfully with valid credentials using Supabase authentication.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the instructor login page."
+      },
+      {
+        "type": "action",
+        "description": "Input valid instructor email and password."
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form."
+      },
+      {
+        "type": "assertion",
+        "description": "Check that login is successful and the user is redirected to the Instructor Dashboard."
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Failed login with invalid credentials",
+    "description": "Verify that login fails when invalid credentials are provided and proper error message is shown.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page."
+      },
+      {
+        "type": "action",
+        "description": "Input invalid email or password."
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form."
+      },
+      {
+        "type": "assertion",
+        "description": "Check that login is rejected and an 'Invalid credentials' error message is displayed."
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Role-based access control enforcement",
+    "description": "Ensure that users without instructor roles cannot access the Instructor Dashboard.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as a user without the instructor role."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to navigate to the Instructor Dashboard URL."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is denied and user sees appropriate authorization error or redirect."
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Instructor Dashboard displays ministerial programming from JSON mock data",
+    "description": "Verify that the Instructor Dashboard correctly loads and displays the ministerial program weeks using mock JSON data converted from PDFs.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as an instructor."
+      },
+      {
+        "type": "assertion",
+        "description": "Check that the Dashboard loads with the weekly programming shown matching the JSON mock data."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the data matches expected parts of the PDF source converted to JSON."
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "CRUD operations on students in the Dashboard",
+    "description": "Test creating, reading, updating, and deleting student entries through the instructor interface.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as instructor and go to student management section."
+      },
+      {
+        "type": "action",
+        "description": "Create a new student with valid data."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new student appears in the student list."
+      },
+      {
+        "type": "action",
+        "description": "Edit the new student's details (e.g., update name or related info)."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm the updated information is saved and displayed correctly."
+      },
+      {
+        "type": "action",
+        "description": "Delete the created student."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the student is removed from the list and data store."
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Assigning parts of programming to students per S-38 rules",
+    "description": "Check the assignment functionality ensuring assignments abide by S-38 validation rules and are correctly saved.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as instructor."
+      },
+      {
+        "type": "action",
+        "description": "Select a student from the student list."
+      },
+      {
+        "type": "action",
+        "description": "Assign program parts to the student following S-38 rules."
+      },
+      {
+        "type": "assertion",
+        "description": "Validate that the assignment passes rule checks and is successfully created."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to assign program parts violating S-38 rules."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the system rejects invalid assignments with appropriate error messages."
+      },
+      {
+        "type": "action",
+        "description": "Update an existing assignment for a student."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm the update is saved and reflected properly."
+      },
+      {
+        "type": "action",
+        "description": "Delete an assignment."
+      },
+      {
+        "type": "assertion",
+        "description": "Check that the assignment is removed correctly."
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Students can view only their personal assignments",
+    "description": "Verify that student users can log in and see only their own assignments on the Student Portal.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as a student user."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the student sees only assignments related to their account."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access assignments of other students via URL or API."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm that access is denied and data is not exposed."
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Offline functionality with local IndexedDB cache and Service Workers",
+    "description": "Test that key data including programming, students, and assignments remain available offline via caching mechanisms and that data syncs upon reconnect.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in and load Dashboard with programming and student data."
+      },
+      {
+        "type": "action",
+        "description": "Go offline by disconnecting network."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the Dashboard and student assignment data are still accessible."
+      },
+      {
+        "type": "action",
+        "description": "Make changes in offline mode (e.g., assign a part or update student data)."
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure changes are saved locally and reflected correctly in UI."
+      },
+      {
+        "type": "action",
+        "description": "Reconnect network."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm that offline changes are synchronized to server/backend."
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Admin Dashboard is not accessible or present",
+    "description": "Verify that the Admin Dashboard has been fully removed and cannot be accessed by any user.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to navigate to any Admin Dashboard URLs."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that access is blocked or pages return 404/not found."
+      },
+      {
+        "type": "action",
+        "description": "Search frontend and backend for Admin Dashboard presence."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that no Admin Dashboard UI elements or routes exist."
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "PDF to JSON parsing and saving via backend API",
+    "description": "Test backend API ability to accept PDF path, parse the PDF, convert to JSON, and save the programming data successfully.",
+    "category": "integration",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Use API /api/programacoes/parse-pdf with valid PDF file path."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify response status 200 and confirmation message of successful save."
+      },
+      {
+        "type": "action",
+        "description": "Use API /api/programacoes/parse-pdf with invalid or missing path."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify response status 400 with error message 'PDF path is required'."
+      },
+      {
+        "type": "action",
+        "description": "Use API /api/programacoes/parse-pdf with non-existent PDF file."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify response status 404 with error message 'PDF file not found'."
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "List and retrieve assignments via API",
+    "description": "Verify the assignments API endpoints for listing all assignments and retrieving single assignments.",
+    "category": "integration",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Call GET /api/designacoes/ to list all assignments."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify status 200 and assignments data returned."
+      },
+      {
+        "type": "action",
+        "description": "Call GET /api/designacoes/{id} with valid assignment id."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify status 200 and correct assignment data returned."
+      },
+      {
+        "type": "action",
+        "description": "Call GET /api/designacoes/{id} with invalid/non-existing id."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify status 404 and appropriate error message."
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Create student with missing required data",
+    "description": "Ensure that the API returns appropriate error when trying to create a student with missing mandatory fields.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Send POST /api/estudantes/ with incomplete JSON missing required fields."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify response status is 400 with clear validation error messages."
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Family members management: create, update and delete",
+    "description": "Verify full CRUD operations on family members related to students including validation for required fields.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create a family member with valid data via POST /family-members/."
+      },
+      {
+        "type": "assertion",
+        "description": "Check response 201 and family member is retrievable."
+      },
+      {
+        "type": "action",
+        "description": "Try creating family member with missing name."
+      },
+      {
+        "type": "assertion",
+        "description": "Check response 400 with 'Name is required' error."
+      },
+      {
+        "type": "action",
+        "description": "Update an existing family member's details."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm update success and changed data."
+      },
+      {
+        "type": "action",
+        "description": "Delete an existing family member."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify deletion response and member is no longer retrievable."
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Reports API returns report data successfully",
+    "description": "Validate that the GET /api/reports endpoint returns reports data with status 200.",
+    "category": "functional",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Call GET /api/reports/ endpoint."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify status is 200 and reports data is returned successfully."
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "UI responsiveness and navigation",
+    "description": "Check that the UI is responsive across devices and navigation flows for instructors and students work without errors.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access the app on desktop, tablet, and mobile screen sizes."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI components and layout adjust correctly and remain usable."
+      },
+      {
+        "type": "action",
+        "description": "Navigate through all major user flows: login, dashboard, student management, assignment creation, student portal."
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure all pages load correctly without errors and links/buttons work."
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "System logs contain no errors during usage",
+    "description": "Monitor the application console logs during normal usage to confirm absence of errors or warnings.",
+    "category": "functional",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Use the app performing typical workflows: login, CRUD operations, assignments, offline mode."
+      },
+      {
+        "type": "assertion",
+        "description": "Observe browser console and backend logs contain no error or warning messages."
+      }
+    ]
+  }
+]

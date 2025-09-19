@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Student Redirect</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .log {
+            background: #000;
+            color: #00ff00;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .log.error {
+            color: #ff5555;
+        }
+        .log.success {
+            color: #55ff55;
+        }
+        .log.warning {
+            color: #ffff55;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Debug Student Redirect</h1>
+        <p>This tool helps debug the student login redirect issue for Franklin.</p>
+        
+        <div>
+            <h3>Test Student Login</h3>
+            <input type="email" id="email" placeholder="Email" value="franklinmarceloferreiradelima@gmail.com">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="testLogin()">Test Login Flow</button>
+            <button onclick="clearLogs()">Clear Logs</button>
+        </div>
+        
+        <div id="logs"></div>
+
+        <script type="module">
+            import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js';
+            
+            // Use environment variables with fallback to correct URL
+            const SUPABASE_URL = import.meta.env?.VITE_SUPABASE_URL || 'https://nwpuurgwnnuejqinkvrh.supabase.co';
+            const SUPABASE_ANON_KEY = import.meta.env?.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsdm9qb2x2ZHNxcmZjempqanV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1ODcwNjUsImV4cCI6MjA3MzE2MzA2NX0.J5CE7TrRJj8C0gWjbokSkMSRW1S-q8AwKUV5Z7xuODQ';
+            
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            
+            function log(message, type = 'info') {
+                const logsDiv = document.getElementById('logs');
+                const logDiv = document.createElement('div');
+                logDiv.className = `log ${type}`;
+                logDiv.textContent = `[${new Date().toISOString()}] ${message}`;
+                logsDiv.appendChild(logDiv);
+                logsDiv.scrollTop = logsDiv.scrollHeight;
+            }
+            
+            async function testLogin() {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    log('Please enter email and password', 'error');
+                    return;
+                }
+                
+                log(`Starting login flow for ${email}`);
+                
+                try {
+                    // 1. Sign in
+                    log('1. Attempting to sign in...');
+                    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+                    
+                    if (signInError) {
+                        log(`Sign in failed: ${signInError.message}`, 'error');
+                        return;
+                    }
+                    
+                    log('✅ Sign in successful', 'success');
+                    log(`User ID: ${signInData.user.id}`);
+                    log(`Email: ${signInData.user.email}`);
+                    
+                    // 2. Check user profile
+                    log('2. Checking user profile...');
+                    const { data: profileData, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', signInData.user.id)
+                        .single();
+                    
+                    if (profileError) {
+                        log(`Profile check failed: ${profileError.message}`, 'error');
+                        return;
+                    }
+                    
+                    log('✅ Profile loaded successfully', 'success');
+                    log(`Profile role: ${profileData.role || 'Not set'}`);
+                    log(`Profile cargo: ${profileData.cargo || 'Not set'}`);
+                    
+                    // 3. Determine redirect based on profile
+                    log('3. Determining redirect...');
+                    let redirectPath = '/dashboard';
+                    
+                    if (profileData.role === 'admin') {
+                        redirectPath = '/admin';
+                    } else if (profileData.cargo === 'publicador_batizado' || profileData.cargo === 'publicador_nao_batizado') {
+                        redirectPath = '/estudantes';
+                    }
+                    
+                    log(`Determined redirect path: ${redirectPath}`, 'success');
+                    
+                    // 4. Simulate redirect
+                    log(`4. Would redirect to: ${redirectPath}`, 'warning');
+                    log('🎉 Login flow completed successfully!', 'success');
+                    
+                } catch (error) {
+                    log(`Exception during login flow: ${error.message}`, 'error');
+                }
+            }
+            
+            function clearLogs() {
+                document.getElementById('logs').innerHTML = '';
+            }
+            
+            // Log initial configuration
+            log('🔧 Supabase Configuration:');
+            log(`   URL: ${SUPABASE_URL}`);
+            log(`   Key: ${SUPABASE_ANON_KEY.substring(0, 20)}...`);
+        </script>
+    </div>
+</body>
+</html>
