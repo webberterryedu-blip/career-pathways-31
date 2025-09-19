@@ -165,34 +165,34 @@ const DesignacoesPage = () => {
     };
 
     try {
-      // Prefer Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('list-programs-json', {
-        body: { limit: 1 }
-      });
-
-      if (error) {
-        throw error;
+      // Try backend API to get all available programs
+      const response = await fetch('http://localhost:3001/api/programacoes/mock');
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          // Load the most recent program by default
+          const sortedPrograms = data.sort((a, b) => 
+            new Date(b.idSemana || '').getTime() - new Date(a.idSemana || '').getTime()
+          );
+          const latestProgram = sortedPrograms[0];
+          const programa = toProgramaSemanal(latestProgram);
+          setProgramaAtual(programa);
+          toast({ 
+            title: 'Programa carregado', 
+            description: `Programa "${programa.semana}" carregado com sucesso. ${data.length} programas disponíveis no total.` 
+          });
+          return;
+        }
       }
-
-      if (data?.programas && data.programas.length > 0) {
-        const programa = toProgramaSemanal(data.programas[0]);
-        setProgramaAtual(programa);
-        toast({ title: 'Programa carregado', description: `Programa "${programa.semana}" carregado com sucesso.` });
-        return;
-      }
-
-      // Sem dados — usar fallback
-      const fallback = toProgramaSemanal(fallbackProgramas[0]);
-      setProgramaAtual(fallback);
-      toast({ title: 'Programa (local) carregado', description: `Usando dados locais: ${fallback.semana}` });
     } catch (error) {
-      console.warn('Edge Function indisponível, usando fallback local.', error);
-      const fallback = toProgramaSemanal(fallbackProgramas[0]);
-      setProgramaAtual(fallback);
-      toast({ title: 'Programa (local) carregado', description: `Usando dados locais: ${fallback.semana}` });
-    } finally {
-      setIsLoading(false);
+      console.warn('Backend API indisponível, usando fallback local.', error);
     }
+
+    // Use fallback
+    const fallback = toProgramaSemanal(fallbackProgramas[0]);
+    setProgramaAtual(fallback);
+    toast({ title: 'Programa (local) carregado', description: `Usando dados locais: ${fallback.semana}` });
+    setIsLoading(false);
   };
 
   // Salvar designações no backend
@@ -227,21 +227,25 @@ const DesignacoesPage = () => {
         }))
       };
 
-      const { data, error } = await supabase.functions.invoke('save-assignments', {
-        body: payload
+      // Try backend API first
+      const response = await fetch('http://localhost:3001/api/designacoes/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer test'
+        },
+        body: JSON.stringify(payload)
       });
 
-      if (error) {
-        if (typeof error?.message === 'string' && error.message.includes('atualização de esquema')) {
-          throw new Error('O sistema está passando por uma atualização de esquema. Por favor, tente novamente em alguns minutos.');
-        }
-        throw error;
+      if (response.ok) {
+        toast({
+          title: 'Designações salvas!',
+          description: `${designacoes.length} designações foram salvas com sucesso.`
+        });
+        return;
       }
 
-      toast({
-        title: 'Designações salvas!',
-        description: `${designacoes.length} designações foram salvas com sucesso.`
-      });
+      throw new Error('Falha na conexão com o backend');
     } catch (error: any) {
       console.error('Erro ao salvar designações:', error);
       // Fallback: salvar rascunho local
@@ -352,69 +356,76 @@ const DesignacoesPage = () => {
 
     setIsGenerating(true);
     try {
-      const { data: result, error } = await supabase.functions.invoke('generate-assignments', {
-        body: {
+      // Try backend API first
+      const response = await fetch('http://localhost:3001/api/designacoes/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer test'
+        },
+        body: JSON.stringify({
           programacao_id: programaAtual.id,
           congregacao_id: congregacaoId
-        }
+        })
       });
 
-      if (error) {
-        throw error;
-      }
-      console.log('Resposta da API de geração:', result);
-      
-      // Atualizar estado com as designações geradas
-      // O backend retorna as designações no campo 'designacoes'
-      const designacoesGeradas = result.designacoes || [];
-      console.log('Designações geradas:', designacoesGeradas);
-      
-      if (designacoesGeradas.length > 0) {
-        setDesignacoes(designacoesGeradas);
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Resposta da API de geração:', result);
+        
+        // Backend returns the assignments in the 'designacoes' field
+        const designacoesGeradas = result.designacoes || [];
+        console.log('Designações geradas:', designacoesGeradas);
+        
+        if (designacoesGeradas.length > 0) {
+          setDesignacoes(designacoesGeradas);
 
-        // Enhanced success message with algorithm info
-        const summary = result.summary || {};
-        const algorithmUsed = result.algorithm || 'S-38';
-        const fallbacksApplied = summary.fallbacks_applied || 0;
-        
-        let description = `${designacoesGeradas.length} designações foram criadas usando o algoritmo ${algorithmUsed}.`;
-        if (fallbacksApplied > 0) {
-          description += ` ${fallbacksApplied} designações usaram estratégias de fallback.`;
+          // Enhanced success message with algorithm info
+          const summary = result.summary || {};
+          const algorithmUsed = result.algorithm || 'S-38';
+          const fallbacksApplied = summary.fallbacks_applied || 0;
+          
+          let description = `${designacoesGeradas.length} designações foram criadas usando o algoritmo ${algorithmUsed}.`;
+          if (fallbacksApplied > 0) {
+            description += ` ${fallbacksApplied} designações usaram estratégias de fallback.`;
+          }
+          
+          toast({ 
+            title: 'Designações geradas com sucesso!', 
+            description: description
+          });
+        } else {
+          const summary = result.summary || {};
+          const pendingCount = summary.designacoes_pendentes || 0;
+          
+          toast({ 
+            title: 'Atenção: Designações com restrições', 
+            description: `O algoritmo S-38 gerou designações, mas ${pendingCount} partes ficaram pendentes devido às regras de qualificação e disponibilidade.`, 
+            variant: 'destructive' 
+          });
         }
-        
-        toast({ 
-          title: 'Designações geradas com sucesso!', 
-          description: description
-        });
-      } else {
-        const summary = result.summary || {};
-        const pendingCount = summary.designacoes_pendentes || 0;
-        
-        toast({ 
-          title: 'Atenção: Designações com restrições', 
-          description: `O algoritmo S-38 gerou designações, mas ${pendingCount} partes ficaram pendentes devido às regras de qualificação e disponibilidade.`, 
-          variant: 'destructive' 
-        });
+        return;
       }
     } catch (error: any) {
-      // Fallback local
-      const locais = gerarDesignacoesLocal();
-      if (locais.length > 0) {
-        setDesignacoes(locais);
-        toast({
-          title: 'Designações geradas (local)',
-          description: `${locais.length} designações criadas com gerador local.`
-        });
-      } else {
-        toast({ 
-          title: 'Erro ao gerar designações', 
-          description: error?.message || 'Falha na geração', 
-          variant: 'destructive' 
-        });
-      }
-    } finally {
-      setIsGenerating(false);
+      console.warn('Backend API indisponível, usando gerador local:', error);
     }
+
+    // Fallback local
+    const locais = gerarDesignacoesLocal();
+    if (locais.length > 0) {
+      setDesignacoes(locais);
+      toast({
+        title: 'Designações geradas (local)',
+        description: `${locais.length} designações criadas com gerador local.`
+      });
+    } else {
+      toast({ 
+        title: 'Erro ao gerar designações', 
+        description: 'Falha na geração', 
+        variant: 'destructive' 
+      });
+    }
+    setIsGenerating(false);
   };
 
   // Mock students mapping (should come from real database)

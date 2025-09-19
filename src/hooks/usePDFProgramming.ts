@@ -1,4 +1,6 @@
 import { useState, useCallback } from 'react';
+import { getAuthHeaders } from '@/utils/auth';
+import { logger } from '@/utils/logger';
 
 // URL base da API: usa variável de ambiente quando válida
 export const getApiBaseUrl = () => {
@@ -110,12 +112,12 @@ export function usePDFProgramming() {
         : `${baseUrl}/api/admin/scan-pdfs`;
       console.log('🔗 Endpoint completo:', apiUrl);
       
+      const authHeaders = await getAuthHeaders();
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer test' // TODO: Implementar autenticação real
+          ...authHeaders,
+          'Accept': 'application/json'
         }
       });
 
@@ -167,12 +169,10 @@ export function usePDFProgramming() {
         : `${parseBase}/api/admin/parse-pdf`;
       console.log('🔗 Endpoint completo:', apiUrl);
       
+      const authHeaders = await getAuthHeaders();
       const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer test' // TODO: Implementar autenticação real
-        },
+        headers: authHeaders,
         body: JSON.stringify({ filePath: pdf.filePath })
       });
 
@@ -218,12 +218,10 @@ export function usePDFProgramming() {
       const validateUrl = import.meta.env.DEV
         ? `/api/admin/validate-pdf`
         : `${validateBase}/api/admin/validate-pdf`;
+      const authHeaders = await getAuthHeaders();
       const response = await fetch(validateUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer test' // TODO: Implementar autenticação real
-        },
+        headers: authHeaders,
         body: JSON.stringify({ filePath: pdf.filePath })
       });
 
@@ -271,12 +269,10 @@ export function usePDFProgramming() {
       const saveUrl = import.meta.env.DEV
         ? `/api/admin/save-programming`
         : `${saveBase}/api/admin/save-programming`;
+      const authHeaders = await getAuthHeaders();
       const response = await fetch(saveUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer test' // TODO: Implementar autenticação real
-        },
+        headers: authHeaders,
         body: JSON.stringify({ programming })
       });
 

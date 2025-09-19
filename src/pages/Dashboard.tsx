@@ -18,23 +18,25 @@ import {
 import SidebarLayout from "@/components/layout/SidebarLayout";
 import { useNavigate } from "react-router-dom";
 import { useEstudantes } from "@/hooks/useEstudantes";
+import { useDesignacoesPendentes } from "@/hooks/useDesignacoesPendentes";
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
   const { estudantes, isLoading: estudantesLoading } = useEstudantes();
+  const { stats: designacoesStats, isLoading: designacoesLoading } = useDesignacoesPendentes();
   
-  // Estatísticas reais dos estudantes
+  // Estatísticas reais dos estudantes e designações
   const stats = useMemo(() => {
     const total = estudantes?.length || 0;
     const ativos = estudantes?.filter((e: any) => e.ativo)?.length || 0;
     return {
       totalEstudantes: total,
       estudantesAtivos: ativos,
-      designacoesPendentes: 0, // TODO: implementar contagem real
+      designacoesPendentes: designacoesStats.pendentes,
       proximaReuniao: "2025-07-07"
     };
-  }, [estudantes]);
+  }, [estudantes, designacoesStats.pendentes]);
 
   return (
     <SidebarLayout 

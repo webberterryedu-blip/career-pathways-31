@@ -8,6 +8,7 @@ const fse = require('fs-extra');
 // Importar rotas essenciais
 const programacoesRoutes = require('./routes/programacoes');
 const designacoesRoutes = require('./routes/designacoes');
+const designacoesAlgoritmoRoutes = require('./routes/designacoes-algoritmo');
 const estudantesRoutes = require('./routes/estudantes');
 const reportsRoutes = require('./routes/reports');
 const authRoutes = require('./routes/auth');
@@ -43,7 +44,8 @@ app.use('/materials', express.static(path.join(__dirname, '../docs/Oficial')));
 
 // Rotas essenciais
 app.use('/api/programacoes', programacoesRoutes);
-app.use('/api/designacoes', designacoesRoutes);
+app.use('/api/designacoes', designacoesAlgoritmoRoutes); // Algoritmo principal
+app.use('/api/designacoes-legacy', designacoesRoutes); // Legacy
 app.use('/api/estudantes', estudantesRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/congregacoes', congregacoesRoutes);
@@ -53,19 +55,45 @@ app.use('/family-members', familyMembersRoutes);
 // Rota para programações mockadas a partir de JSON local
 // GET /api/programacoes/mock?mes=YYYY-MM
 // GET /api/programacoes/mock?semana=YYYY-MM-DD
+// GET /api/programacoes/mock (lista todos os arquivos disponíveis)
 app.get('/api/programacoes/mock', async (req, res) => {
   try {
     const { mes, semana } = req.query;
+    const baseDir = path.join(__dirname, '../docs/Oficial/programacoes-json');
+
+    // Se nenhum parâmetro for fornecido, listar todos os arquivos disponíveis
     if (!mes && !semana) {
-      return res.status(400).json({ error: 'informe ?mes=YYYY-MM ou ?semana=YYYY-MM-DD' });
+      try {
+        const files = await fse.readdir(baseDir);
+        const jsonFiles = files.filter(file => file.endsWith('.json'));
+        const allPrograms = [];
+
+        for (const file of jsonFiles) {
+          const filePath = path.join(baseDir, file);
+          try {
+            const data = await fse.readJSON(filePath);
+            if (Array.isArray(data)) {
+              allPrograms.push(...data);
+            } else if (data) {
+              allPrograms.push(data);
+            }
+          } catch (fileError) {
+            console.warn(`⚠️ Erro ao ler arquivo ${file}:`, fileError.message);
+          }
+        }
+
+        return res.json(allPrograms);
+      } catch (dirError) {
+        console.error('❌ Erro ao ler diretório de programações:', dirError);
+        return res.status(500).json({ error: 'Erro ao acessar programações' });
+      }
     }
 
     const fileMonth = mes || (semana ? String(semana).slice(0, 7) : null);
     if (!fileMonth) {
-      return res.status(400).json({ error: 'parâmetros inválidos' });
+      return res.status(400).json({ error: 'informe ?mes=YYYY-MM ou ?semana=YYYY-MM-DD' });
     }
 
-    const baseDir = path.join(__dirname, '../docs/Oficial/programacoes-json');
     const filePath = path.join(baseDir, `${fileMonth}.json`);
 
     const exists = await fse.pathExists(filePath);

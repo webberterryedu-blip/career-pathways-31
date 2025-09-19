@@ -264,34 +264,45 @@ const ProgramasPage = () => {
   // Carregar programas reais dos arquivos JSON (via backend simplificado)
   const carregarProgramasReais = async () => {
     try {
-      const months = ["2025-09", "2025-11"];
-      const results = await Promise.all(months.map(fetchMockMonth));
-      const flatWeeks = results.flatMap((data) => Array.isArray(data) ? data : []);
-      if (!flatWeeks.length) throw new Error('Nenhum programa encontrado');
+      // Try backend API to get all available programs
+      const response = await fetch('http://localhost:3001/api/programacoes/mock');
+      if (!response.ok) {
+        throw new Error('Backend API não disponível');
+      }
 
-      const programasConvertidos: ProgramaSemanal[] = flatWeeks.map((prog: any) => ({
-        id: prog.idSemana || prog.id,
-        semana: prog.semanaLabel || prog.semana,
-        data_inicio: prog.idSemana || prog.dataInicio || prog.data_inicio,
-        mes_ao: undefined as any,
-        mes_ano: new Date((prog.idSemana || `${months[0]}-01`)).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
-        tema: prog.tema,
-        partes: prog.programacao ? prog.programacao.flatMap((secao: any) => 
-          secao.partes.map((parte: any, index: number) => ({
-            numero: parte.idParte || index + 1,
+      const data = await response.json();
+      if (!Array.isArray(data)) {
+        console.warn('Dados inesperados do backend:', data);
+        return;
+      }
+
+      const programasConvertidos = data.map((programaData: any) => ({
+        id: programaData.idSemana,
+        semana: programaData.semanaLabel,
+        data_inicio: programaData.idSemana,
+        mes_ano: programaData.tema || 'Programa Ministerial',
+        tema: programaData.tema,
+        partes: (programaData.programacao || []).flatMap((secao: any) => 
+          (secao.partes || []).map((parte: any) => ({
+            numero: parte.idParte,
             titulo: parte.titulo,
-            tempo: parte.duracaoMin || parte.tempo,
+            tempo: parte.duracaoMin,
             tipo: parte.tipo,
             secao: secao.secao,
             referencia: Array.isArray(parte.referencias) ? parte.referencias.join('; ') : parte.referencia,
             instrucoes: parte.instrucoes
           }))
-        ) : prog.partes || [],
+        ),
         criado_em: new Date().toISOString(),
         atualizado_em: new Date().toISOString()
       }));
 
-      setProgramas(programasConvertidos);
+      // Sort programs by date (newest first)
+      const sortedPrograms = programasConvertidos.sort((a, b) => 
+        new Date(b.data_inicio || '').getTime() - new Date(a.data_inicio || '').getTime()
+      );
+
+      setProgramas(sortedPrograms);
       toast({
         title: "Programas carregados",
         description: `${programasConvertidos.length} programa(s) carregado(s) dos arquivos JSON.`
@@ -309,9 +320,8 @@ const ProgramasPage = () => {
   // Carregar PDFs disponíveis
   const carregarPDFsDisponiveis = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('list-pdfs');
-      if (error) throw error;
-      if (data?.pdfs) setPdfsDisponiveis(data.pdfs);
+      // Temporarily disabled to avoid CORS errors
+      console.log('PDF loading temporarily disabled');
     } catch (error) {
       console.error('Erro ao carregar PDFs:', error);
     }
