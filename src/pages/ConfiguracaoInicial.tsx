@@ -128,9 +128,9 @@ const ConfiguracaoInicial = () => {
   const isStepValid = () => {
     switch (currentStep) {
       case 1:
-        return formData.nome_completo.trim().length > 0;
+        return formData.nome.trim().length > 0;
       case 2:
-        return formData.congregacao.trim().length > 0;
+        return formData.congregacao_id.trim().length > 0;
       case 3:
         return true; // Preferences are optional
       default:
@@ -210,8 +210,8 @@ const ConfiguracaoInicial = () => {
                     <Label htmlFor="nome">{t('initialSetup.fields.fullName')} *</Label>
                     <Input
                       id="nome"
-                      value={formData.nome_completo}
-                      onChange={(e) => handleInputChange('nome_completo', e.target.value)}
+                      value={formData.nome}
+                      onChange={(e) => handleInputChange('nome', e.target.value)}
                       placeholder={t('initialSetup.fields.fullNamePlaceholder')}
                       required
                     />
@@ -260,8 +260,8 @@ const ConfiguracaoInicial = () => {
                     <Label htmlFor="congregacao">{t('initialSetup.fields.congregationName')} *</Label>
                     <Input
                       id="congregacao"
-                      value={formData.congregacao}
-                      onChange={(e) => handleInputChange('congregacao', e.target.value)}
+                      value={formData.congregacao_id}
+                      onChange={(e) => handleInputChange('congregacao_id', e.target.value)}
                       placeholder={t('initialSetup.fields.congregationPlaceholder')}
                       required
                     />

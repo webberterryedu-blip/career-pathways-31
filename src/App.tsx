@@ -63,9 +63,7 @@ if (import.meta.env.DEV && import.meta.env.VITE_LOG_LEVEL !== 'error') {
     import("@/utils/forceLogout"),
     import("@/utils/supabaseHealthCheck"),
     import("@/utils/logoutDiagnostics"),
-    import("@/utils/emergencyLogout"),
-    import("@/utils/familyMemberDebug"),
-    import("@/utils/quickSync")
+    import("@/utils/emergencyLogout")
   ]).then(() => {
     console.log('✅ Debug tools loaded successfully');
   }).catch(error => {
@@ -243,7 +241,7 @@ const App = () => (
                       path="/estudante/:id/familia"
                       element={
                         <ProtectedRoute allowedRoles={['estudante', 'instrutor']}>
-                          <FamiliaPage />
+                          <div>Portal Familiar em construção</div>
                         </ProtectedRoute>
                       }
                     />
