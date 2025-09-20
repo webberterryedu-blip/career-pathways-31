@@ -202,7 +202,7 @@ export const useSpreadsheetImport = () => {
 
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
-              .insert(profileData)
+              .insert({ ...profileData, user_id: 'temp' })
               .select()
               .single();
 
@@ -217,7 +217,8 @@ export const useSpreadsheetImport = () => {
 
             // Then create estudante record
             const estudanteData = {
-              profile_id: profile.id,
+              nome: result.data!.nome,
+              user_id: 'temp',
               genero: result.data!.genero,
               ativo: result.data!.ativo ?? true
             };
@@ -382,7 +383,7 @@ export const useSpreadsheetImport = () => {
                 const matchingStudent = allStudents.find((s: any) => s.id === id);
                 if (matchingStudent && matchingStudent.profiles &&
                     calculateNameSimilarity(
-                      matchingStudent.profiles.nome || '',
+                      matchingStudent.nome || '',
                       student.parentName
                     ) > 0.7) {
                   parentId = id;

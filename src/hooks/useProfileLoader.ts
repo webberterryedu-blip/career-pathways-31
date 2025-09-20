@@ -75,7 +75,7 @@ export const useProfileLoader = () => {
         email 
       };
       authLogger.success('Profile created from metadata', profileWithEmail);
-      return profileWithEmail as UserProfile;
+      return { ...profileWithEmail, congregacao: '', role: 'instrutor' } as UserProfile;
     } catch (error) {
       authLogger.error('Error creating profile from metadata', error);
       return null;
@@ -142,6 +142,8 @@ export const useProfileLoader = () => {
         const profileWithEmail = { 
           ...profileData, 
           data_nascimento: profileData.data_nascimento || null,
+          congregacao: profileData.congregacao || '',
+          role: (profileData.role || 'instrutor') as UserRole,
           email 
         } as UserProfile;
         

@@ -343,7 +343,7 @@ export const CacheAsideComparison = {
       await supabase
         .from('estudantes')
         .select('*')
-        .eq('profile_id', userId);
+        .eq('user_id', userId);
       
       const time = Date.now() - start;
       times.push(time);
@@ -369,7 +369,7 @@ export const CacheAsideComparison = {
       const { data } = await supabase
         .from('estudantes')
         .select('*')
-        .eq('profile_id', userId);
+        .eq('user_id', userId);
       return data;
     };
     

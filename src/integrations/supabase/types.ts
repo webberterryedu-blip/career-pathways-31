@@ -22,6 +22,7 @@ export type Database = {
           data_designacao: string | null
           estudante_id: string | null
           id: string
+          observacoes: string | null
           parte_id: string | null
           programa_id: string | null
           status: string | null
@@ -37,6 +38,7 @@ export type Database = {
           data_designacao?: string | null
           estudante_id?: string | null
           id?: string
+          observacoes?: string | null
           parte_id?: string | null
           programa_id?: string | null
           status?: string | null
@@ -52,6 +54,7 @@ export type Database = {
           data_designacao?: string | null
           estudante_id?: string | null
           id?: string
+          observacoes?: string | null
           parte_id?: string | null
           programa_id?: string | null
           status?: string | null
@@ -91,11 +94,13 @@ export type Database = {
           contador_designacoes: number | null
           created_at: string
           data_nascimento: string | null
+          disponibilidade: Json | null
           familia_id: string | null
           genero: string | null
           id: string
           menor: boolean | null
           nome: string
+          profile_id: string | null
           qualificacoes: Json | null
           responsavel_primario: string | null
           responsavel_secundario: string | null
@@ -109,11 +114,13 @@ export type Database = {
           contador_designacoes?: number | null
           created_at?: string
           data_nascimento?: string | null
+          disponibilidade?: Json | null
           familia_id?: string | null
           genero?: string | null
           id?: string
           menor?: boolean | null
           nome: string
+          profile_id?: string | null
           qualificacoes?: Json | null
           responsavel_primario?: string | null
           responsavel_secundario?: string | null
@@ -127,11 +134,13 @@ export type Database = {
           contador_designacoes?: number | null
           created_at?: string
           data_nascimento?: string | null
+          disponibilidade?: Json | null
           familia_id?: string | null
           genero?: string | null
           id?: string
           menor?: boolean | null
           nome?: string
+          profile_id?: string | null
           qualificacoes?: Json | null
           responsavel_primario?: string | null
           responsavel_secundario?: string | null
@@ -139,35 +148,90 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "estudantes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partes_programa: {
+        Row: {
+          created_at: string
+          duracao_minutos: number | null
+          id: string
+          ordem: number | null
+          semana_id: string | null
+          tipo: string | null
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          duracao_minutos?: number | null
+          id?: string
+          ordem?: number | null
+          semana_id?: string | null
+          tipo?: string | null
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          duracao_minutos?: number | null
+          id?: string
+          ordem?: number | null
+          semana_id?: string | null
+          tipo?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partes_programa_semana_id_fkey"
+            columns: ["semana_id"]
+            isOneToOne: false
+            referencedRelation: "semanas_programa"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           cargo: string | null
+          congregacao: string | null
           created_at: string
+          data_nascimento: string | null
           email: string | null
           id: string
           nome: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           cargo?: string | null
+          congregacao?: string | null
           created_at?: string
+          data_nascimento?: string | null
           email?: string | null
           id?: string
           nome?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           cargo?: string | null
+          congregacao?: string | null
           created_at?: string
+          data_nascimento?: string | null
           email?: string | null
           id?: string
           nome?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -204,6 +268,44 @@ export type Database = {
         }
         Relationships: []
       }
+      semanas_programa: {
+        Row: {
+          created_at: string
+          data_inicio: string | null
+          id: string
+          leitura_biblica: string | null
+          programa_id: string | null
+          semana_numero: number
+          tema_semana: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_inicio?: string | null
+          id?: string
+          leitura_biblica?: string | null
+          programa_id?: string | null
+          semana_numero: number
+          tema_semana?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_inicio?: string | null
+          id?: string
+          leitura_biblica?: string | null
+          programa_id?: string | null
+          semana_numero?: number
+          tema_semana?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "semanas_programa_programa_id_fkey"
+            columns: ["programa_id"]
+            isOneToOne: false
+            referencedRelation: "programas_ministeriais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -212,7 +314,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "instrutor" | "estudante"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -339,6 +441,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "instrutor", "estudante"],
+    },
   },
 } as const

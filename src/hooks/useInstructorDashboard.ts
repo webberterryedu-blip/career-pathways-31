@@ -241,7 +241,7 @@ export const useInstructorDashboard = () => {
 
       // For now, we'll simulate progress and qualifications data
       // In a real implementation, this would come from additional tables
-      const studentsWithProgress: EstudanteWithProgress[] = (students || []).map(student => {
+      const studentsWithProgress = (students || []).map(student => {
         // Simulate progress level based on student data
         // Since cargo is in the profile table, we'll use a default approach for the real implementation
         const getProgressLevel = (): ProgressLevel => {
