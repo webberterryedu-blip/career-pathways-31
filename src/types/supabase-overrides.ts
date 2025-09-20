@@ -10,8 +10,17 @@ export type SimpleEstudante = {
   user_id: string;
   profile_id?: string;
   created_at: string;
-  qualificacoes?: any;
+  qualificacoes?: string[];
   disponibilidade?: any;
+  cargo?: string;
+  contador_designacoes?: number;
+  data_nascimento?: string;
+  familia_id?: string;
+  menor?: boolean;
+  responsavel_primario?: string;
+  responsavel_secundario?: string;
+  ultima_designacao?: string;
+  updated_at?: string;
 };
 
 export type SimpleProfile = {
@@ -42,6 +51,29 @@ export type SimpleDesignacao = {
   data_designacao?: string;
   created_at: string;
   updated_at: string;
+};
+
+export type SimplePrograma = {
+  id: string;
+  user_id: string;
+  nome: string;
+  descricao?: string;
+  tipo?: string;
+  ativo?: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SimplePartePrograma = {
+  id: string;
+  titulo: string;
+  duracao_minutos?: number;
+  semana_id?: string;
+  ordem?: number;
+  tipo?: string;
+  tipo_designacao?: string;
+  genero_requerido?: string;
+  created_at: string;
 };
 
 // Simple supabase client with overrides

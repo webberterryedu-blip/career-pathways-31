@@ -15,7 +15,7 @@ export interface EstudanteWithParent {
   genero: string;
   qualificacoes?: string[];
   ativo: boolean;
-  profile_id: string;
+  profile_id?: string;
   congregacao_id?: string;
   created_at?: string;
   disponibilidade?: any;

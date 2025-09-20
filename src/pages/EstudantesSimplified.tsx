@@ -31,7 +31,16 @@ export default function EstudantesSimplified() {
         throw error;
       }
 
-      setEstudantes(data || []);
+      // Convert qualificacoes from Json to string[] if needed
+      const transformedData = (data || []).map(estudante => ({
+        ...estudante,
+        qualificacoes: Array.isArray(estudante.qualificacoes) 
+          ? estudante.qualificacoes.map(q => String(q))
+          : typeof estudante.qualificacoes === 'string' 
+            ? [estudante.qualificacoes] 
+            : []
+      }));
+      setEstudantes(transformedData);
     } catch (err) {
       console.error('Erro ao buscar estudantes:', err);
       setError('Erro ao carregar estudantes');

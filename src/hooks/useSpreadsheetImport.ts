@@ -383,7 +383,7 @@ export const useSpreadsheetImport = () => {
                 const matchingStudent = allStudents.find((s: any) => s.id === id);
                 if (matchingStudent && matchingStudent.profiles &&
                     calculateNameSimilarity(
-                      matchingStudent.nome || '',
+                      matchingStudent.profiles.nome || '',
                       student.parentName
                     ) > 0.7) {
                   parentId = id;

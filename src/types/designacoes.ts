@@ -5,9 +5,11 @@ import type { EstudanteRow } from "./estudantes";
 export type DesignacaoRow = Database["public"]["Tables"]["designacoes"]["Row"];
 export type DesignacaoInsert = Database["public"]["Tables"]["designacoes"]["Insert"];
 export type DesignacaoUpdate = Database["public"]["Tables"]["designacoes"]["Update"];
-export type ProgramaRow = Database["public"]["Tables"]["programas"]["Row"];
-export type ProgramaInsert = Database["public"]["Tables"]["programas"]["Insert"];
-export type ProgramaUpdate = Database["public"]["Tables"]["programas"]["Update"];
+
+// Use programas_ministeriais instead of programas for now
+export type ProgramaRow = Database["public"]["Tables"]["programas_ministeriais"]["Row"];
+export type ProgramaInsert = Database["public"]["Tables"]["programas_ministeriais"]["Insert"];
+export type ProgramaUpdate = Database["public"]["Tables"]["programas_ministeriais"]["Update"];
 
 // Tipos específicos para o sistema de designações S-38-T
 export type TipoParteS38T =

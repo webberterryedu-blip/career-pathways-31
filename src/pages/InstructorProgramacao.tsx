@@ -240,9 +240,21 @@ export default function InstructorProgramacao() {
           .select();
 
         if (insertError) throw insertError;
-        setPartes(insertedPartes || []);
+        // Add missing properties to match PartePrograma interface
+        const transformedPartes = (insertedPartes || []).map(parte => ({
+          ...parte,
+          tipo_designacao: parte.tipo_designacao || 'demonstracao',
+          genero_requerido: (parte.genero_requerido as 'masculino' | 'feminino' | 'ambos') || 'ambos'
+        }));
+        setPartes(transformedPartes);
       } else {
-        setPartes(existingPartes);
+        // Add missing properties to match PartePrograma interface
+        const transformedPartes = existingPartes.map(parte => ({
+          ...parte,
+          tipo_designacao: parte.tipo_designacao || 'demonstracao',
+          genero_requerido: (parte.genero_requerido as 'masculino' | 'feminino' | 'ambos') || 'ambos'
+        }));
+        setPartes(transformedPartes);
       }
     } catch (error) {
       console.error('Error loading partes:', error);

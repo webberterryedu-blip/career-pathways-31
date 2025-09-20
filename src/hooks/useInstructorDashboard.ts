@@ -296,7 +296,16 @@ export const useInstructorDashboard = () => {
 
       studentsWithProgress.forEach(student => {
         const level = student.progress?.progress_level || 'beginning';
-        studentsByProgress[level].push(student);
+        // Convert qualificacoes from Json to string[] if needed
+        const studentWithCorrectTypes = {
+          ...student,
+          qualificacoes: Array.isArray(student.qualificacoes) 
+            ? student.qualificacoes 
+            : typeof student.qualificacoes === 'string' 
+              ? [student.qualificacoes] 
+              : []
+        } as EstudanteWithProgress;
+        studentsByProgress[level].push(studentWithCorrectTypes);
       });
 
       // Organize data by speech type
@@ -310,9 +319,19 @@ export const useInstructorDashboard = () => {
       };
 
       studentsWithProgress.forEach(student => {
+        // Convert qualificacoes from Json to string[] if needed
+        const studentWithCorrectTypes = {
+          ...student,
+          qualificacoes: Array.isArray(student.qualificacoes) 
+            ? student.qualificacoes 
+            : typeof student.qualificacoes === 'string' 
+              ? [student.qualificacoes] 
+              : []
+        } as EstudanteWithProgress;
+        
         Object.entries(student.qualifications || {}).forEach(([speechType, isQualified]) => {
           if (isQualified && speechType in studentsBySpeechType) {
-            studentsBySpeechType[speechType as SpeechType].push(student);
+            studentsBySpeechType[speechType as SpeechType].push(studentWithCorrectTypes);
           }
         });
       });

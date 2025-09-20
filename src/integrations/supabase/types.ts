@@ -158,32 +158,122 @@ export type Database = {
           },
         ]
       }
+      family_members: {
+        Row: {
+          created_at: string
+          email: string | null
+          family_id: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          phone: string | null
+          relationship_type: string | null
+          student_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          family_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          phone?: string | null
+          relationship_type?: string | null
+          student_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          family_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          phone?: string | null
+          relationship_type?: string | null
+          student_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      invitations_log: {
+        Row: {
+          created_at: string
+          family_member_id: string | null
+          id: string
+          invitation_type: string
+          responded_at: string | null
+          response_data: Json | null
+          sent_at: string | null
+          status: string | null
+          student_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          family_member_id?: string | null
+          id?: string
+          invitation_type: string
+          responded_at?: string | null
+          response_data?: Json | null
+          sent_at?: string | null
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          family_member_id?: string | null
+          id?: string
+          invitation_type?: string
+          responded_at?: string | null
+          response_data?: Json | null
+          sent_at?: string | null
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       partes_programa: {
         Row: {
           created_at: string
           duracao_minutos: number | null
+          genero_requerido: string | null
           id: string
           ordem: number | null
           semana_id: string | null
           tipo: string | null
+          tipo_designacao: string | null
           titulo: string
         }
         Insert: {
           created_at?: string
           duracao_minutos?: number | null
+          genero_requerido?: string | null
           id?: string
           ordem?: number | null
           semana_id?: string | null
           tipo?: string | null
+          tipo_designacao?: string | null
           titulo: string
         }
         Update: {
           created_at?: string
           duracao_minutos?: number | null
+          genero_requerido?: string | null
           id?: string
           ordem?: number | null
           semana_id?: string | null
           tipo?: string | null
+          tipo_designacao?: string | null
           titulo?: string
         }
         Relationships: [
@@ -230,6 +320,39 @@ export type Database = {
           id?: string
           nome?: string | null
           role?: Database["public"]["Enums"]["app_role"] | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      programas: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          tipo: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          tipo?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          tipo?: string | null
           updated_at?: string
           user_id?: string | null
         }
