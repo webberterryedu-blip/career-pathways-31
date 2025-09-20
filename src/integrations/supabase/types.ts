@@ -14,7 +14,196 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      designacoes: {
+        Row: {
+          ajudante_id: string | null
+          cena: string | null
+          created_at: string
+          data_designacao: string | null
+          estudante_id: string | null
+          id: string
+          parte_id: string | null
+          programa_id: string | null
+          status: string | null
+          tempo_minutos: number | null
+          titulo_parte: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ajudante_id?: string | null
+          cena?: string | null
+          created_at?: string
+          data_designacao?: string | null
+          estudante_id?: string | null
+          id?: string
+          parte_id?: string | null
+          programa_id?: string | null
+          status?: string | null
+          tempo_minutos?: number | null
+          titulo_parte?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ajudante_id?: string | null
+          cena?: string | null
+          created_at?: string
+          data_designacao?: string | null
+          estudante_id?: string | null
+          id?: string
+          parte_id?: string | null
+          programa_id?: string | null
+          status?: string | null
+          tempo_minutos?: number | null
+          titulo_parte?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "designacoes_ajudante_id_fkey"
+            columns: ["ajudante_id"]
+            isOneToOne: false
+            referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "designacoes_estudante_id_fkey"
+            columns: ["estudante_id"]
+            isOneToOne: false
+            referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "designacoes_programa_id_fkey"
+            columns: ["programa_id"]
+            isOneToOne: false
+            referencedRelation: "programas_ministeriais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estudantes: {
+        Row: {
+          ativo: boolean | null
+          cargo: string | null
+          contador_designacoes: number | null
+          created_at: string
+          data_nascimento: string | null
+          familia_id: string | null
+          genero: string | null
+          id: string
+          menor: boolean | null
+          nome: string
+          qualificacoes: Json | null
+          responsavel_primario: string | null
+          responsavel_secundario: string | null
+          ultima_designacao: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cargo?: string | null
+          contador_designacoes?: number | null
+          created_at?: string
+          data_nascimento?: string | null
+          familia_id?: string | null
+          genero?: string | null
+          id?: string
+          menor?: boolean | null
+          nome: string
+          qualificacoes?: Json | null
+          responsavel_primario?: string | null
+          responsavel_secundario?: string | null
+          ultima_designacao?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cargo?: string | null
+          contador_designacoes?: number | null
+          created_at?: string
+          data_nascimento?: string | null
+          familia_id?: string | null
+          genero?: string | null
+          id?: string
+          menor?: boolean | null
+          nome?: string
+          qualificacoes?: Json | null
+          responsavel_primario?: string | null
+          responsavel_secundario?: string | null
+          ultima_designacao?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          cargo: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cargo?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cargo?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      programas_ministeriais: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_url: string | null
+          created_at: string
+          id: string
+          mes_ano: string
+          status: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          created_at?: string
+          id?: string
+          mes_ano: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          created_at?: string
+          id?: string
+          mes_ano?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

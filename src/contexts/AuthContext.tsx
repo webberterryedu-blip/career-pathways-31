@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (profileData) {
         console.log('Profile loaded successfully:', profileData);
-        setProfile(profileData);
+        setProfile({ ...profileData, role: profileData.cargo || 'estudante' });
         setAuthError(null);
       } else {
         console.log('No profile found, creating one');

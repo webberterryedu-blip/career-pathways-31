@@ -48,7 +48,7 @@ const DesignacoesReais: React.FC = () => {
                     Estudante Principal
                   </div>
                   <div className="text-sm text-gray-700">
-                    {designacao.estudante?.profile_id || designacao.estudante_id || 'Não atribuído'}
+                    {designacao.estudante?.nome || designacao.estudante_id || 'Não atribuído'}
                   </div>
                 </div>
                 
@@ -59,7 +59,7 @@ const DesignacoesReais: React.FC = () => {
                       Ajudante
                     </div>
                     <div className="text-sm text-gray-700">
-                      {designacao.ajudante.profile_id || designacao.ajudante_id}
+                      {designacao.ajudante.nome || designacao.ajudante_id}
                     </div>
                   </div>
                 )}
