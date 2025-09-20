@@ -86,17 +86,16 @@ export function useCacheAsideEstudantes() {
           .from('estudantes')
           .select(`
             id,
+            nome,
             genero,
             qualificacoes,
-            disponibilidade,
             ativo,
-            profile_id,
-            created_at,
-            profiles!inner(nome)
+            user_id,
+            created_at
           `)
-          .eq('profile_id', user.id)
+          .eq('user_id', user.id)
           .eq('ativo', true)
-          .order('nome', { foreignTable: 'profiles' });
+          .order('nome');
 
         const dbEndTime = Date.now();
         const dbTime = dbEndTime - dbStartTime;
@@ -169,8 +168,9 @@ export function useCacheAsideEstudantes() {
       const { data, error } = await supabase
         .from('estudantes')
         .insert({
+          nome: estudanteData.nome || 'Novo Estudante',
           genero: estudanteData.genero || 'masculino',
-          profile_id: user.id,
+          user_id: user.id,
           ativo: true
         })
         .select()

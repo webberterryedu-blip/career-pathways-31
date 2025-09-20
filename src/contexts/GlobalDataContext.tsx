@@ -240,7 +240,7 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
     
     try {
       const { data, error } = await supabase
-        .from('programas')
+        .from('programas_ministeriais')
         .select('*')
         .eq('user_id', user.id)
         .order('data_inicio_semana', { ascending: false })

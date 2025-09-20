@@ -60,8 +60,8 @@ export const UserFlowGuide: React.FC<UserFlowGuideProps> = ({ onNavigate }) => {
 
       // Verificar programas
       const { data: programs, error: programsError } = await supabase
-        .from('programas')
-        .select('id, assignment_status')
+        .from('programas_ministeriais')
+        .select('id, status')
         .eq('user_id', user.id);
 
       // Verificar designações
@@ -73,7 +73,7 @@ export const UserFlowGuide: React.FC<UserFlowGuideProps> = ({ onNavigate }) => {
       const hasStudents = students && students.length > 0;
       const hasPrograms = programs && programs.length > 0;
       const hasAssignments = assignments && assignments.length > 0;
-      const hasPendingPrograms = programs?.some(p => p.assignment_status === 'pending') || false;
+      const hasPendingPrograms = programs?.some(p => p.status === 'pending') || false;
 
       // Definir próximo passo
       let nextStep = 0;

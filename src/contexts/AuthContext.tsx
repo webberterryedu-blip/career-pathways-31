@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (profileData) {
         console.log('Profile loaded successfully:', profileData);
-        setProfile({ ...profileData, role: profileData.cargo || 'estudante' });
+        setProfile({ ...profileData, role: (profileData.cargo === 'admin' || profileData.cargo === 'instrutor' || profileData.cargo === 'estudante') ? profileData.cargo as 'admin' | 'instrutor' | 'estudante' : 'estudante' });
         setAuthError(null);
       } else {
         console.log('No profile found, creating one');
@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Error creating profile:', createError);
             setAuthError('Erro ao criar perfil');
           } else {
-            setProfile(createdProfile);
+            setProfile({ ...createdProfile, role: (createdProfile.cargo === 'admin' || createdProfile.cargo === 'instrutor' || createdProfile.cargo === 'estudante') ? createdProfile.cargo as 'admin' | 'instrutor' | 'estudante' : 'estudante' });
             setAuthError(null);
           }
         }
@@ -276,7 +276,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (data) {
-        setProfile(data);
+        setProfile({ ...data, role: (data.cargo === 'admin' || data.cargo === 'instrutor' || data.cargo === 'estudante') ? data.cargo as 'admin' | 'instrutor' | 'estudante' : 'estudante' });
       }
       
       return { data, error: null };
