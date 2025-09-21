@@ -1,6 +1,2 @@
-import { supabase } from "@/integrations/supabase/client";
-
-// Temporary type helper until database types refresh
-export const supabaseClient = supabase as any;
-
-export default supabaseClient;
+// Re-export the main Supabase client to maintain compatibility
+export { supabase as supabaseClient, supabase as default } from '@/integrations/supabase/client';
