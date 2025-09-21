@@ -7,7 +7,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo \"Backend simplificado build completed\" && npm ci --production",
-    "test": "jest"
+    "test": "jest",
+    "verify-key": "node verify-service-role-key.js",
+    "check-table": "node check-table-structure.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",

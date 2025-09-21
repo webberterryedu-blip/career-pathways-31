@@ -12,7 +12,7 @@ console.log('  VITE_SUPABASE_URL:', process.env.VITE_SUPABASE_URL);
 console.log('  VITE_SUPABASE_ANON_KEY exists:', !!process.env.VITE_SUPABASE_ANON_KEY);
 
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error('SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (ou VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY) são obrigatórios');
+  throw new Error('SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (ou VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY) são obrigatórios.\n\nPara obter a SERVICE ROLE KEY:\n1. Acesse: https://app.supabase.com/project/jbapewpuvfijrkhlbsid/settings/api\n2. Copie a "Service Role Secret"\n3. Cole no arquivo .env na variável SUPABASE_SERVICE_ROLE_KEY\n\nVeja SUPABASE_SETUP_INSTRUCTIONS.md para mais detalhes.');
 }
 
 console.log('Supabase config:', { supabaseUrl, supabaseKey: supabaseKey.substring(0, 10) + '...' });

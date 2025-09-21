@@ -19,7 +19,7 @@ SELECT
     role,
     created_at,
     updated_at
-FROM profiles 
+FROM public.profiles 
 WHERE email = 'frankwebber33@hotmail.com';
 
 -- STEP 3: CHECK IF THERE'S A USER_ID MISMATCH (common cause of auth issues)
@@ -34,12 +34,12 @@ SELECT
         ELSE 'MISMATCH - NEEDS FIX'
     END as status
 FROM auth.users u
-LEFT JOIN profiles p ON u.email = p.email
+LEFT JOIN public.profiles p ON u.email = p.email
 WHERE u.email = 'frankwebber33@hotmail.com';
 
 -- STEP 4: FIX USER_ID MISMATCH (if found)
 -- This updates the profile to have the correct user_id from auth.users
-UPDATE profiles 
+UPDATE public.profiles 
 SET user_id = (
     SELECT id 
     FROM auth.users 
@@ -63,7 +63,7 @@ SELECT
         ELSE 'STILL MISMATCHED'
     END as status
 FROM auth.users u
-LEFT JOIN profiles p ON u.email = p.email
+LEFT JOIN public.profiles p ON u.email = p.email
 WHERE u.email = 'frankwebber33@hotmail.com';
 
 -- STEP 6: CREATE A NEW TEST USER IF NEEDED
@@ -72,12 +72,12 @@ WHERE u.email = 'frankwebber33@hotmail.com';
 -- Then run this to create the profile:
 
 /*
-INSERT INTO profiles (user_id, email, nome, role, created_at, updated_at)
+INSERT INTO public.profiles (user_id, email, nome, role, created_at, updated_at)
 SELECT id, 'test@system.com', 'Test User', 'instrutor', NOW(), NOW()
 FROM auth.users 
 WHERE email = 'test@system.com'
 AND NOT EXISTS (
-    SELECT 1 FROM profiles WHERE email = 'test@system.com'
+    SELECT 1 FROM public.profiles WHERE email = 'test@system.com'
 );
 */
 
@@ -91,5 +91,32 @@ SELECT
     u.id = p.user_id as user_id_match,
     'READY FOR LOGIN' as status
 FROM auth.users u
-LEFT JOIN profiles p ON u.id = p.user_id
+LEFT JOIN public.profiles p ON u.id = p.user_id
 WHERE u.email = 'frankwebber33@hotmail.com';
+
+-- STEP 8: ADDITIONAL VERIFICATION FOR ROLE
+-- Ensure the user has the correct role assigned
+SELECT 
+    p.email,
+    p.nome,
+    p.role,
+    CASE 
+        WHEN p.role IN ('admin', 'instrutor') THEN 'AUTHORIZED'
+        ELSE 'CHECK ROLE'
+    END as access_status
+FROM public.profiles p
+WHERE p.email = 'frankwebber33@hotmail.com';
+
+-- STEP 9: CHECK CONGREGATION ASSIGNMENT
+-- Verify the user has a valid congregation assignment
+SELECT 
+    p.email,
+    p.nome,
+    c.nome as congregacao_nome,
+    CASE 
+        WHEN c.id IS NOT NULL THEN 'ASSIGNED'
+        ELSE 'NEEDS CONGREGATION'
+    END as congregation_status
+FROM public.profiles p
+LEFT JOIN public.congregacoes c ON p.congregacao_id = c.id
+WHERE p.email = 'frankwebber33@hotmail.com';
