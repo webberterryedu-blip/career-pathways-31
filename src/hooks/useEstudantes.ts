@@ -29,23 +29,14 @@ export function useEstudantes() {
 
       console.log('Fetching estudantes from Supabase...');
 
-      // First try the view
-      let { data: estudantesData, error: estudantesError } = await supabase
-        .from('vw_estudantes_grid')
-        .select('*')
+      // Directly query the estudantes table since the view might not exist or have issues
+      const { data: estudantesData, error: estudantesError } = await supabase
+        .from('estudantes')
+        .select(`
+          *,
+          profiles!left (id, nome, email, telefone, cargo, role)
+        `)
         .eq('ativo', true);
-
-      // If view doesn't exist, fall back to direct table query
-      if (estudantesError && estudantesError.message.includes('relation "vw_estudantes_grid" does not exist')) {
-        console.log('vw_estudantes_grid view not found, falling back to direct table query...');
-        ({ data: estudantesData, error: estudantesError } = await supabase
-          .from('estudantes')
-          .select(`
-            *,
-            profiles (id, nome, email, telefone, cargo)
-          `)
-          .eq('ativo', true));
-      }
 
       if (estudantesError) {
         console.error('Error fetching estudantes:', estudantesError);
@@ -74,6 +65,8 @@ export function useEstudantes() {
           telefone: estudante.telefone || profileData.telefone || null,
           profile_id: estudante.profile_id || profileData.id || estudante.id,
           congregacao_id: estudante.congregacao_id || null,
+          user_id: estudante.user_id,
+          created_at: estudante.created_at,
         } as Estudante;
       });
 

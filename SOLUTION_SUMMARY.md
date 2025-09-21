@@ -140,3 +140,63 @@ If issues persist after following all steps:
 **🔧 Result**: Designações page now working correctly  
 
 The complete solution addresses all the Supabase relationship issues and provides robust fallback mechanisms for reliable data loading.
+
+# 🎯 Solution Summary - Database View Issue Fixed
+
+## Problem Identified
+The frontend application was showing 404 errors when trying to access the `vw_estudantes_grid` view because it didn't exist in your Supabase database. This was preventing the student list from loading properly.
+
+## Root Cause
+The database migrations that create the required view had not been applied to your remote Supabase database, even though they existed in your local project files.
+
+## Solution Implemented
+
+### 1. ✅ Fixed Frontend Code (src/hooks/useEstudantes.ts)
+- Removed the problematic attempt to access the missing view
+- Updated the hook to directly query the `estudantes` table with proper joins to `profiles`
+- Improved error handling and data transformation logic
+- Fixed TypeScript errors related to unknown table names
+
+### 2. 📄 Created Database Fix Instructions (FIX_DATABASE_ISSUE.md)
+- Detailed step-by-step guide to create the missing database view
+- Instructions for both dashboard-based and CLI-based migration application
+- Verification steps to confirm the fix worked
+
+### 3. 🔍 Created Verification Script (backend/verify-database-fix.js)
+- Script to check if all required database objects exist
+- Clear error messages when objects are missing
+- Guidance on how to fix issues when found
+
+### 4. ⚙️ Added NPM Script
+- Added `npm run verify:database` command for easy verification
+
+## Files Modified/Added
+
+1. **src/hooks/useEstudantes.ts** - Fixed frontend hook to work without the view
+2. **FIX_DATABASE_ISSUE.md** - Detailed instructions to fix the database
+3. **backend/verify-database-fix.js** - Verification script
+4. **package.json** - Added verification script command
+
+## Immediate Actions Required
+
+1. **Apply Database Fixes**:
+   - Follow the instructions in `FIX_DATABASE_ISSUE.md`
+   - Run the SQL commands in your Supabase dashboard to create the missing view
+
+2. **Verify the Fix**:
+   - Run `npm run verify:database` to check if everything is working
+   - Restart your development server with `npm run dev`
+
+3. **Test the Application**:
+   - The student list should now load properly without 404 errors
+   - You should see the 27 student records you previously inserted
+
+## Expected Results
+
+After applying these fixes:
+- ✅ No more 404 errors in the browser console
+- ✅ Student list loads correctly
+- ✅ All 27 student records are displayed
+- ✅ Application functions normally
+
+The issue was successfully resolved by updating the frontend to work with the existing database structure and providing clear instructions to create the missing database view.

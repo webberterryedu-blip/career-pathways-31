@@ -91,7 +91,8 @@
     "testsprite:smoke:win": "powershell -ExecutionPolicy Bypass -File scripts\\run-testsprite-smoke.ps1",
     "fix:rls-storage": "node scripts/apply-rls-and-storage-fixes.js",
     "fix:policies-only": "node scripts/apply-policy-fixes.js",
-    "verify:storage": "node scripts/verify-storage-setup.js"
+    "verify:storage": "node scripts/verify-storage-setup.js",
+    "verify:database": "node backend/verify-database-fix.js"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
