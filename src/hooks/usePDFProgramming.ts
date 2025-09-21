@@ -314,11 +314,11 @@ export function usePDFProgramming() {
         ? (status ? `/api/admin/programmings?status=${status}` : `/api/admin/programmings`)
         : (status ? `${listBase}/api/admin/programmings?status=${status}` : `${listBase}/api/admin/programmings`);
       
+      const authHeaders = await getAuthHeaders();
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer test' // TODO: Implementar autenticação real
+          ...authHeaders
         }
       });
 

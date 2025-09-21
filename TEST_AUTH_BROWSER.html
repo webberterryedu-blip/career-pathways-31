@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Auth Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Supabase Authentication Test</h1>
+        <p>Test your login credentials directly without the React app.</p>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="frankwebber33@hotmail.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Enter your password">
+        </div>
+        
+        <button onclick="testAuth()">Test Authentication</button>
+        <button onclick="testCommonPasswords()">Test Common Passwords</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Configuration from your .env file
+        const SUPABASE_URL = 'https://jbapewpuvfijrkhlbsid.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiYXBld3B1dmZpanJraGxic2lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNzQ4NzcsImV4cCI6MjA3Mzk1MDg3N30.kaj9f-oVMlpzddZbBilbU81grVVpmLjKKmUG-zpKoSg';
+        
+        // Create Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.className = 'result ' + type;
+        }
+        
+        async function testAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showResult('Please enter both email and password', 'error');
+                return;
+            }
+            
+            showResult('Testing authentication...', 'info');
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+                
+                if (error) {
+                    showResult(`❌ Authentication failed:\n${error.message}`, 'error');
+                } else {
+                    showResult(`✅ Authentication successful!\nUser ID: ${data.user.id}\nEmail: ${data.user.email}`, 'success');
+                    // Sign out immediately
+                    await supabase.auth.signOut();
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCommonPasswords() {
+            const email = document.getElementById('email').value;
+            const commonPasswords = ['Test1234!', 'password', 'Password123', 'frankwebber', '123456', 'admin123'];
+            
+            showResult('Testing common passwords...\nThis may take a moment.', 'info');
+            
+            for (const password of commonPasswords) {
+                try {
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password,
+                    });
+                    
+                    if (error) {
+                        showResult(prev => prev + `\n❌ Failed with "${password}": ${error.message}`);
+                    } else {
+                        showResult(`✅ SUCCESS! Correct password is: "${password}"\nUser ID: ${data.user.id}`, 'success');
+                        // Sign out immediately
+                        await supabase.auth.signOut();
+                        return;
+                    }
+                } catch (error) {
+                    showResult(prev => prev + `\n❌ Error with "${password}": ${error.message}`);
+                }
+            }
+            
+            showResult(prev => prev + '\n\n❌ None of the common passwords worked. You need to reset your password in the Supabase dashboard.', 'error');
+        }
+    </script>
+</body>
+</html>

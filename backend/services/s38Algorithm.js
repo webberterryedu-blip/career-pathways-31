@@ -7,7 +7,6 @@
  */
 
 class S38Algorithm {
-  
   /**
    * 3) Mapeamento de Partes → Tipos Internos
    * Convert program parts to internal types for uniform logic
@@ -18,6 +17,9 @@ class S38Algorithm {
     
     // Tesouros da Palavra de Deus
     if (tipo.includes('talk') && titulo.includes('tesouro')) {
+      return 'treasures_talk';
+    }
+    if (tipo.includes('talk') || tipo.includes('discurso') || tipo.includes('consideracao')) {
       return 'talk';
     }
     if (tipo.includes('spiritual_gems') || tipo.includes('joias') || titulo.includes('joias espirituais')) {
@@ -38,15 +40,17 @@ class S38Algorithm {
       return 'making_disciples';
     }
     if (tipo.includes('explaining') || titulo.includes('explicando suas crenças')) {
-      return 'explaining';
+      // Check if it's a talk or demonstration
+      if (titulo.includes('discurso') || tipo.includes('talk')) {
+        return 'explaining_talk';
+      } else {
+        return 'explaining_demo';
+      }
     }
     
     // Vivendo como Cristãos
     if (tipo.includes('congregation_study') || titulo.includes('estudo bíblico de congregação')) {
       return 'congregation_study';
-    }
-    if (tipo.includes('talk') || tipo.includes('discurso') || tipo.includes('consideracao')) {
-      return 'talk';
     }
     
     // Fallback
@@ -65,6 +69,12 @@ class S38Algorithm {
         roleRequired: ['elder', 'ministerial_servant'],
         assistantRequired: false,
         qualification: 'talk'
+      },
+      'treasures_talk': {
+        gender: 'masculino',
+        roleRequired: ['elder', 'ministerial_servant'],
+        assistantRequired: false,
+        qualification: 'tresures'
       },
       'spiritual_gems': {
         gender: 'masculino',
@@ -104,7 +114,13 @@ class S38Algorithm {
         assistantFamilyOk: false,
         qualification: 'making'
       },
-      'explaining': {
+      'explaining_talk': {
+        gender: 'masculino',
+        roleRequired: null,
+        assistantRequired: false,
+        qualification: 'explaining'
+      },
+      'explaining_demo': {
         gender: 'ambos',
         roleRequired: null,
         assistantRequired: true,

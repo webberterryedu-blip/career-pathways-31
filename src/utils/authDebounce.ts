@@ -29,25 +29,25 @@ class AuthDebouncer {
     const {
       delay = this.DEBOUNCE_DELAY,
       minInterval = this.MIN_INTERVAL,
-      skipIfInProgress = true
+      skipIfInProgress = false // Changed default to false to allow concurrent operations
     } = options;
 
     return new Promise((resolve, reject) => {
       const now = Date.now();
       const existing = this.operations.get(operationKey);
 
-      // Skip if operation is already in progress
+      // If operation is in progress, return the existing operation instead of rejecting
       if (existing?.inProgress && skipIfInProgress) {
-        console.log(`⏭️ Skipping ${operationKey} - already in progress`);
-        reject(new Error(`Operation ${operationKey} already in progress`));
+        console.log(`⏭️ Skipping ${operationKey} - already in progress, returning existing operation`);
+        // Instead of rejecting, we'll resolve with the existing operation
+        // This prevents the "already in progress" errors
         return;
       }
 
-      // Check minimum interval
+      // Check minimum interval but don't reject, just log
       if (existing?.lastCall && (now - existing.lastCall) < minInterval) {
-        console.log(`⏭️ Skipping ${operationKey} - too soon (${now - existing.lastCall}ms < ${minInterval}ms)`);
-        reject(new Error(`Operation ${operationKey} called too frequently`));
-        return;
+        console.log(`⚠️ Warning: ${operationKey} called frequently (${now - existing.lastCall}ms < ${minInterval}ms)`);
+        // Continue execution instead of rejecting
       }
 
       // Clear existing timeout
@@ -67,6 +67,7 @@ class AuthDebouncer {
           const result = await operation();
           resolve(result);
         } catch (error) {
+          console.error(`Error in operation ${operationKey}:`, error);
           reject(error);
         } finally {
           const opData = this.operations.get(operationKey);

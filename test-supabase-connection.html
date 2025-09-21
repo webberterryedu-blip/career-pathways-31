@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #testResults {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Supabase Connection Test</h1>
+        <p>This page tests the connection to your Supabase instance.</p>
+        
+        <button id="runTest">Run Connection Test</button>
+        
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        // Configuration - Update these with your actual Supabase credentials
+        const SUPABASE_URL = 'https://jbapewpuvfijrkhlbsid.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiYXBld3B1dmZpanJraGxic2lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNzQ4NzcsImV4cCI6MjA3Mzk1MDg3N30.kaj9f-oVMlpzddZbBilbU81grVVpmLjKKmUG-zpKoSg';
+
+        // Initialize Supabase client
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.getElementById('runTest').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '<p>Testing connection...</p>';
+            
+            try {
+                // Test 1: Basic connection
+                const { data, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-result error">
+                            <h3>❌ Connection Test Failed</h3>
+                            <p>Error: ${error.message}</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                resultsDiv.innerHTML = `
+                    <div class="test-result success">
+                        <h3>✅ Supabase Connection Successful</h3>
+                        <p>Current session: ${data.session ? 'Active' : 'None'}</p>
+                    </div>
+                `;
+                
+                // Test 2: Database access
+                try {
+                    const { data: profiles, error: profilesError } = await supabase
+                        .from('profiles')
+                        .select('count')
+                        .limit(1);
+                    
+                    if (profilesError) {
+                        resultsDiv.innerHTML += `
+                            <div class="test-result error">
+                                <h3>❌ Database Access Test Failed</h3>
+                                <p>Error: ${profilesError.message}</p>
+                            </div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML += `
+                            <div class="test-result success">
+                                <h3>✅ Database Access Successful</h3>
+                                <p>Can access profiles table</p>
+                            </div>
+                        `;
+                    }
+                } catch (dbError) {
+                    resultsDiv.innerHTML += `
+                        <div class="test-result error">
+                            <h3>❌ Database Access Test Exception</h3>
+                            <p>Error: ${dbError.message}</p>
+                        </div>
+                    `;
+                }
+                
+                resultsDiv.innerHTML += `
+                    <div class="test-result success">
+                        <h3>🎉 All Tests Completed</h3>
+                        <p>Your Supabase configuration appears to be working correctly!</p>
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <h3>❌ Connection Test Exception</h3>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

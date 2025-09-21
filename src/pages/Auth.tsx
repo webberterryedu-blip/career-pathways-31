@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, LogIn, UserPlus, Calendar, Home, Church, UserCheck } from "lucide-react";
+import { Eye, EyeOff, LogIn, UserPlus, Calendar, Home, Church, UserCheck, AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -14,13 +14,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import LanguageSwitch from "@/components/LanguageSwitch";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, authError, clearAuthError, confirmUserDev, diagnoseAuthDev, fixProfileDev } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +37,7 @@ const AuthPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [signUpSuccess, setSignUpSuccess] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -44,6 +46,13 @@ const AuthPage: React.FC = () => {
       navigate('/dashboard', { replace: true });
     }
   }, [user?.id, location.pathname, navigate]);
+
+  useEffect(() => {
+    // Clear auth error when switching tabs
+    if (authError) {
+      clearAuthError();
+    }
+  }, [activeTab, authError, clearAuthError]);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -86,11 +95,8 @@ const AuthPage: React.FC = () => {
       const { error } = await signIn(email, password);
       
       if (error) {
-        toast({
-          title: t('auth.error'),
-          description: error.message,
-          variant: "destructive"
-        });
+        // The error is now handled in the AuthContext with user-friendly messages
+        // We don't need to show a toast here as the error is displayed in the UI
       } else {
         toast({
           title: t('auth.success'),
@@ -160,32 +166,25 @@ const AuthPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email: signUpEmail,
-        password: signUpPassword,
-        options: {
-          data: {
-            nome_completo: nomeCompleto,
-            congregacao: congregacao,
-            cargo: cargo,
-            role: role,
-            date_of_birth: dateOfBirth,
-          }
-        }
+      const { error } = await signUp(signUpEmail, signUpPassword, {
+        nome: nomeCompleto,
+        congregacao: congregacao,
+        role: role
       });
 
       if (error) {
-        toast({
-          title: t('forms.error'),
-          description: error.message,
-          variant: "destructive"
-        });
+        // Error is handled in AuthContext, no toast needed
       } else {
-        toast({
-          title: t('auth.success'),
-          description: t('auth.signupSuccess'),
-        });
+        setSignUpSuccess(true);
         setActiveTab("login");
+        // Clear form fields
+        setSignUpEmail("");
+        setSignUpPassword("");
+        setConfirmPassword("");
+        setNomeCompleto("");
+        setCongregacao("");
+        setCargo("");
+        setDateOfBirth("");
       }
     } catch (error) {
       toast({
@@ -255,6 +254,103 @@ const AuthPage: React.FC = () => {
           </CardHeader>
           
           <CardContent>
+            {/* Development notice */}
+            {import.meta.env.DEV && (
+              <Alert className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Modo de Desenvolvimento</AlertTitle>
+                <AlertDescription>
+                  Problemas de autenticação? As causas mais comuns são:
+                  <div className="mt-2 font-medium">1. Confirmação de email obrigatória</div>
+                  <ul className="list-disc pl-5 mt-1 space-y-1">
+                    <li>Acesse o painel do Supabase</li>
+                    <li>Vá em Authentication &gt; Settings</li>
+                    <li>Desative "Enable email confirmations"</li>
+                    <li>Clique em "Save"</li>
+                  </ul>
+                  <div className="mt-2 font-medium">2. Problemas de permissão (RLS)</div>
+                  <ul className="list-disc pl-5 mt-1 space-y-1">
+                    <li>Verifique se o perfil foi criado corretamente</li>
+                    <li>Confirme que as políticas RLS estão configuradas</li>
+                    <li>O campo user_id deve corresponder ao ID de autenticação</li>
+                  </ul>
+                  <div className="mt-2 font-medium">3. URL de redirecionamento incorreta</div>
+                  <ul className="list-disc pl-5 mt-1 space-y-1">
+                    <li>Verifique se VITE_SITE_URL no arquivo .env está correto</li>
+                    <li>Para desenvolvimento, use http://localhost:5173</li>
+                  </ul>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      onClick={() => window.open('https://app.supabase.com/project/jbapewpuvfijrkhlbsid/auth/settings', '_blank')}
+                      className="mr-2"
+                    >
+                      Abrir Supabase Dashboard
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        // Clear any existing error and suggest creating a new user
+                        clearAuthError();
+                        setActiveTab("signup");
+                      }}
+                      className="mr-2"
+                    >
+                      Criar Novo Usuário
+                    </Button>
+                    {diagnoseAuthDev && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={diagnoseAuthDev}
+                        className="mr-2"
+                      >
+                        Diagnosticar Problemas
+                      </Button>
+                    )}
+                    {fixProfileDev && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => fixProfileDev(email, '1d112896-626d-4dc7-a758-0e5bec83fe6c')}
+                      >
+                        Corrigir Perfil
+                      </Button>
+                    )}
+                  </div>
+                  <div className="mt-2 text-sm text-yellow-700">
+                    <strong>Nota:</strong> Se o botão "Corrigir Perfil" falhar devido a políticas RLS, 
+                    use o painel do Supabase para editar manualmente o perfil e definir o user_id correto.
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Success message for signup */}
+            {signUpSuccess && (
+              <Alert className="mb-4">
+                <UserCheck className="h-4 w-4" />
+                <AlertTitle>Cadastro realizado com sucesso!</AlertTitle>
+                <AlertDescription>
+                  Enviamos um email de confirmação para o seu endereço de email. 
+                  Por favor, verifique sua caixa de entrada e clique no link de confirmação antes de fazer login.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Error message */}
+            {authError && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Erro de Autenticação</AlertTitle>
+                <AlertDescription className="whitespace-pre-wrap">
+                  {authError}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login" className="flex items-center gap-2">
@@ -279,6 +375,7 @@ const AuthPage: React.FC = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      autoComplete="email"
                       className="transition-all duration-200"
                     />
                   </div>
@@ -293,6 +390,7 @@ const AuthPage: React.FC = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        autoComplete="current-password"
                         className="pr-10 transition-all duration-200"
                       />
                       <Button
@@ -329,6 +427,17 @@ const AuthPage: React.FC = () => {
                     )}
                   </Button>
                 </form>
+                
+                <div className="text-center text-sm text-gray-500 mt-4">
+                  <p>
+                    Se você acabou de se registrar, verifique seu email para o link de confirmação.
+                  </p>
+                  {import.meta.env.DEV && (
+                    <p className="mt-2 text-xs text-blue-600">
+                      Dica: Verifique as configurações de autenticação no painel do Supabase.
+                    </p>
+                  )}
+                </div>
               </TabsContent>
               
               {/* Sign Up Tab */}
@@ -350,6 +459,7 @@ const AuthPage: React.FC = () => {
                         value={nomeCompleto}
                         onChange={(e) => setNomeCompleto(e.target.value)}
                         required
+                        autoComplete="name"
                       />
                     </div>
                     
@@ -358,6 +468,7 @@ const AuthPage: React.FC = () => {
                       <Input
                         id="date-of-birth"
                         type="date"
+                        autoComplete="bday"
                         value={dateOfBirth}
                         onChange={(e) => setDateOfBirth(e.target.value)}
                       />
@@ -378,6 +489,7 @@ const AuthPage: React.FC = () => {
                       <Input
                         id="congregacao"
                         type="text"
+                        autoComplete="organization"
                         placeholder="Congregação Central"
                         value={congregacao}
                         onChange={(e) => setCongregacao(e.target.value)}
@@ -389,6 +501,7 @@ const AuthPage: React.FC = () => {
                       <Input
                         id="cargo"
                         type="text"
+                        autoComplete="organization-title"
                         placeholder="Ancião, Servo Ministerial, Pioneiro, etc."
                         value={cargo}
                         onChange={(e) => setCargo(e.target.value)}
@@ -437,6 +550,7 @@ const AuthPage: React.FC = () => {
                         value={signUpEmail}
                         onChange={(e) => setSignUpEmail(e.target.value)}
                         required
+                        autoComplete="email"
                       />
                     </div>
                     
@@ -450,6 +564,7 @@ const AuthPage: React.FC = () => {
                           value={signUpPassword}
                           onChange={(e) => setSignUpPassword(e.target.value)}
                           required
+                          autoComplete="new-password"
                         />
                         <Button
                           type="button"
@@ -465,6 +580,9 @@ const AuthPage: React.FC = () => {
                           )}
                         </Button>
                       </div>
+                      <p className="text-xs text-gray-500">
+                        A senha deve ter pelo menos 6 caracteres
+                      </p>
                     </div>
                     
                     <div className="space-y-2">
@@ -476,6 +594,7 @@ const AuthPage: React.FC = () => {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
+                        autoComplete="new-password"
                       />
                     </div>
                   </div>

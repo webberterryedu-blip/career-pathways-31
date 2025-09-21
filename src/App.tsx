@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext"; 
 import { TutorialProvider } from "@/contexts/TutorialContext";
@@ -11,7 +11,7 @@ import { ProgramProvider } from "@/contexts/ProgramContext";
 import { TutorialOverlay } from "@/components/tutorial";
 
 // Eager load critical components
-import Index from "./pages/Index";
+// import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -23,6 +23,7 @@ const InstrutorDashboard = lazy(() => import("./pages/InstrutorDashboard"));
 const EstudantesPage = lazy(() => import("./pages/EstudantesPage"));
 const ProgramasPage = lazy(() => import("./pages/ProgramasPage"));
 const DesignacoesPage = lazy(() => import("./pages/DesignacoesPage"));
+const TreasuresAssignmentsPage = lazy(() => import("./pages/TreasuresAssignmentsPage"));
 const AssignmentsPage = lazy(() => import("./pages/AssignmentsPage"));
 const RelatoriosPage = lazy(() => import("./pages/RelatoriosPage"));
 const UnifiedDashboard = lazy(() => import("./components/UnifiedDashboard"));
@@ -116,7 +117,7 @@ const App = () => (
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     {/* Public Routes */}
-                    <Route path="/" element={<Index />} />
+                    <Route path="/" element={<Navigate to="/auth" replace />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/demo" element={<Demo />} />
                     <Route path="/funcionalidades" element={<Funcionalidades />} />
@@ -200,6 +201,14 @@ const App = () => (
                       element={
                         <ProtectedRoute allowedRoles={['instrutor']}>
                           <DesignacoesPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/treasures-designacoes"
+                      element={
+                        <ProtectedRoute allowedRoles={['instrutor']}>
+                          <TreasuresAssignmentsPage />
                         </ProtectedRoute>
                       }
                     />

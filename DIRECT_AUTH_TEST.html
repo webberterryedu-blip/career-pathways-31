@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Auth Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; }
+        button { background: #007bff; color: white; padding: 12px 20px; border: none; cursor: pointer; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Direct Authentication Test</h1>
+    <p>Test your credentials directly without the app</p>
+    
+    <div class="form-group">
+        <label>Email:</label>
+        <input type="email" id="email" value="frankwebber33@hotmail.com" readonly>
+    </div>
+    
+    <div class="form-group">
+        <label>Password:</label>
+        <input type="password" id="password" placeholder="Enter your password">
+    </div>
+    
+    <button onclick="testAuth()">Test Authentication</button>
+    <button onclick="resetPassword()">Reset Password (Opens Dashboard)</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://jbapewpuvfijrkhlbsid.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiYXBld3B1dmZpanJraGxic2lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNzQ4NzcsImV4cCI6MjA3Mzk1MDg3N30.kaj9f-oVMlpzddZbBilbU81grVVpmLjKKmUG-zpKoSg';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        async function testAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const result = document.getElementById('result');
+            
+            if (!password) {
+                result.innerHTML = 'Please enter a password';
+                result.className = 'result error';
+                return;
+            }
+            
+            result.innerHTML = 'Testing...';
+            result.className = 'result';
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) {
+                    result.innerHTML = `❌ Error: ${error.message}`;
+                    result.className = 'result error';
+                } else {
+                    result.innerHTML = `✅ Success! You're authenticated.<br>User ID: ${data.user.id}`;
+                    result.className = 'result success';
+                    // Sign out to avoid session conflicts
+                    await supabase.auth.signOut();
+                }
+            } catch (error) {
+                result.innerHTML = `❌ Unexpected error: ${error.message}`;
+                result.className = 'result error';
+            }
+        }
+        
+        function resetPassword() {
+            window.open('https://app.supabase.com/project/jbapewpuvfijrkhlbsid/auth/users', '_blank');
+        }
+    </script>
+</body>
+</html>

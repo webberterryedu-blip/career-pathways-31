@@ -1,0 +1,160 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@supabase/mcp-server-supabase",
+        "--read-only",
+        "--project-ref=abcd1234"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_e00e3dceff5cc626fe57f00071d49fe7ac9a8ad2"
+      }
+    }
+  },
+  "treasuresFromGodsWord": {
+    "meetingName": "Treasures From God's Word",
+    "description": "A structured program for instruction, discussion, and practical application of Bible principles",
+    "segments": [
+      {
+        "id": 1,
+        "name": "Talk",
+        "duration": 10,
+        "eligibility": ["elder", "qualified ministerial servant"],
+        "description": "Follows the theme and outline in the Life and Ministry Meeting Workbook",
+        "guidelines": [
+          "When a new Bible book is introduced, a video may be shown",
+          "Speakers may connect the video to the theme but must cover all points outlined",
+          "Artwork and other references may be used to enhance understanding"
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Spiritual Gems",
+        "duration": 10,
+        "eligibility": ["elder", "ministerial servant"],
+        "description": "Question-and-answer segment to engage the audience and reinforce scriptural knowledge",
+        "guidelines": [
+          "No introduction or conclusion is needed",
+          "Audience answers briefly (around 30 seconds)",
+          "Speaker decides if Bible verses should be read aloud"
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Bible Reading",
+        "duration": 4,
+        "eligibility": ["male student"],
+        "description": "Accurate and fluent reading of scripture",
+        "guidelines": [
+          "Reading must be accurate and fluent",
+          "No introduction or conclusion",
+          "Proper pronunciation, stress, modulation, and natural pausing emphasized",
+          "Assignments should match students' abilities"
+        ]
+      },
+      {
+        "id": 4,
+        "name": "Apply Yourself to the Field Ministry",
+        "duration": 15,
+        "description": "Students practice ministry, including conversation, teaching, and preaching",
+        "subSegments": [
+          {
+            "name": "Starting a Conversation",
+            "eligibility": ["any gender student"],
+            "description": "Practice initiating meaningful discussions",
+            "guidelines": [
+              "Assistant should be of the same gender or a family member",
+              "Focus on natural conversation and relevant Bible truths",
+              "Prepare for future discussions"
+            ]
+          },
+          {
+            "name": "Following Up",
+            "eligibility": ["any gender student"],
+            "description": "Demonstrate how to revisit previous conversations",
+            "guidelines": [
+              "Assistant should match the student's gender",
+              "Focus on clarity, naturalness, and effective follow-up techniques"
+            ]
+          },
+          {
+            "name": "Making Disciples",
+            "eligibility": ["any gender student"],
+            "description": "Present a segment of an ongoing Bible study",
+            "guidelines": [
+              "Introduction or conclusion unnecessary unless specified",
+              "Focus on conveying study material clearly",
+              "Model effective teaching methods"
+            ]
+          },
+          {
+            "name": "Explaining Your Beliefs",
+            "eligibility": {
+              "talks": ["male student"],
+              "demonstrations": ["any gender student"]
+            },
+            "description": "Handle talks on thematic questions or demonstrate belief explanations",
+            "guidelines": [
+              "Provide tactful answers using reference material as needed",
+              "Assistants are of the same gender or family members"
+            ]
+          },
+          {
+            "name": "Talk (Student Assignment)",
+            "eligibility": ["male student"],
+            "description": "Present talks based on the Love People brochure",
+            "guidelines": [
+              "Highlight how specific verses apply in ministry",
+              "Explain verse meaning, use, and reasoning approach",
+              "Focus on practical application"
+            ]
+          }
+        ],
+        "settings": [
+          {
+            "name": "House to House",
+            "description": "Door-to-door preaching and follow-ups"
+          },
+          {
+            "name": "Informal Witnessing",
+            "description": "Sharing scripture in everyday situations"
+          },
+          {
+            "name": "Public Witnessing",
+            "description": "Preaching in public spaces such as streets, parks, or businesses"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "name": "Living as Christians",
+        "duration": 15,
+        "eligibility": ["elder", "ministerial servant"],
+        "description": "Helps the audience apply Bible principles",
+        "guidelines": [
+          "Begins after a song",
+          "Discussions encourage audience participation",
+          "Brief interviews, if needed, are preferably conducted from the stage"
+        ]
+      },
+      {
+        "id": 6,
+        "name": "Congregation Bible Study",
+        "duration": 30,
+        "eligibility": ["qualified elder"],
+        "description": "Ensures thorough review of assigned material",
+        "guidelines": [
+          "Conductors selected for ability to preside, keep time, emphasize key scriptures, and highlight applications",
+          "Different conductors and readers may be used weekly",
+          "If time is limited, the chairman may direct abbreviation",
+          "Conductor determines which parts to omit while maintaining focus on essential points"
+        ]
+      }
+    ],
+    "conclusion": "The meeting combines structured teaching, student participation, and practical ministry application, fostering understanding, communication skills, and effective application of biblical principles in daily life."
+  }
+}

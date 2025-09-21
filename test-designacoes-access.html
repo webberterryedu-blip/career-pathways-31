@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Designacoes Access</title>
+</head>
+<body>
+    <h1>Test Designacoes Page Access</h1>
+    <p>Click the button below to test accessing the designacoes page:</p>
+    <button onclick="testAccess()">Test Access to http://localhost:8080/designacoes</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAccess() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testing access...</p>';
+            
+            try {
+                // Try to fetch the designacoes page
+                const response = await fetch('http://localhost:8080/designacoes');
+                if (response.ok) {
+                    resultDiv.innerHTML = '<p style="color: green;">✅ SUCCESS: Can access the designacoes page!</p>';
+                } else {
+                    resultDiv.innerHTML = `<p style="color: red;">❌ ERROR: HTTP ${response.status} - ${response.statusText}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ ERROR: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

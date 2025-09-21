@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Treasures From God's Word Assignment Function</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #333; color: #fff; padding: 15px; border-radius: 4px; overflow-x: auto; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>Test Treasures From God's Word Assignment Function</h1>
+    
+    <div class="container">
+        <h2>Function Details</h2>
+        <p>This function generates assignments for the "Treasures From God's Word" meeting based on the official structure and S-38 guidelines.</p>
+        
+        <h3>Endpoint</h3>
+        <p><code>POST https://YOUR_PROJECT_ID.supabase.co/functions/v1/generate-treasures-assignments</code></p>
+        
+        <h3>Headers</h3>
+        <p><code>Authorization: Bearer YOUR_ANON_KEY</code></p>
+        <p><code>Content-Type: application/json</code></p>
+        
+        <h3>Request Body</h3>
+        <pre>{
+  "semana": "2024-12-09",
+  "data_reuniao": "2024-12-09",
+  "modo_pratica": false
+}</pre>
+    </div>
+    
+    <div class="container">
+        <h2>Test the Function</h2>
+        <p>Enter your Supabase project details to test the function:</p>
+        
+        <div>
+            <label>Supabase URL:</label><br>
+            <input type="text" id="supabaseUrl" placeholder="https://your-project-id.supabase.co" style="width: 100%; padding: 8px; margin: 5px 0;">
+        </div>
+        
+        <div>
+            <label>Anonymous Key:</label><br>
+            <input type="text" id="anonKey" placeholder="Your anon key" style="width: 100%; padding: 8px; margin: 5px 0;">
+        </div>
+        
+        <div>
+            <label>Meeting Date (YYYY-MM-DD):</label><br>
+            <input type="text" id="meetingDate" placeholder="2024-12-09" style="width: 100%; padding: 8px; margin: 5px 0;">
+        </div>
+        
+        <div>
+            <label>
+                <input type="checkbox" id="practiceMode"> Practice Mode (includes detailed field ministry assignments)
+            </label>
+        </div>
+        
+        <button onclick="testFunction()">Test Function</button>
+        
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+    
+    <script>
+        async function testFunction() {
+            const supabaseUrl = document.getElementById('supabaseUrl').value;
+            const anonKey = document.getElementById('anonKey').value;
+            const meetingDate = document.getElementById('meetingDate').value || new Date().toISOString().split('T')[0];
+            const practiceMode = document.getElementById('practiceMode').checked;
+            
+            if (!supabaseUrl || !anonKey) {
+                document.getElementById('result').innerHTML = '<p class="error">Please enter both Supabase URL and Anonymous Key</p>';
+                return;
+            }
+            
+            const url = `${supabaseUrl}/functions/v1/generate-treasures-assignments`;
+            
+            const payload = {
+                semana: meetingDate,
+                data_reuniao: meetingDate,
+                modo_pratica: practiceMode
+            };
+            
+            document.getElementById('result').innerHTML = '<p>Sending request...</p>';
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${anonKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('result').innerHTML = `
+                        <p class="success">✅ Success! Assignments generated.</p>
+                        <h3>Response:</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <p class="error">❌ Error: ${data.message}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <p class="error">❌ Network Error: ${error.message}</p>
+                    <p>Make sure:</p>
+                    <ul>
+                        <li>The function is deployed</li>
+                        <li>Your Supabase URL is correct</li>
+                        <li>Your Anonymous Key is valid</li>
+                        <li>You have internet connection</li>
+                    </ul>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

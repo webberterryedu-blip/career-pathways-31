@@ -1,0 +1,45 @@
+🚨 CREATE PROFILE FOR YOUR USER - IMMEDIATE SOLUTION 🚨
+
+FOLLOW THESE EXACT STEPS TO CREATE A PROFILE FOR YOUR USER:
+
+1. OPEN SUPABASE DASHBOARD:
+   =======================
+   URL: https://app.supabase.com/project/jbapewpuvfijrkhlbsid
+   Sign in with your Supabase account credentials
+
+2. NAVIGATE TO THE PROFILES TABLE:
+   =============================
+   - In the left sidebar, click "Table Editor"
+   - Click on the "profiles" table
+
+3. CREATE A PROFILE FOR YOUR USER:
+   =============================
+   - Click the "Insert" button
+   - Fill in the following fields EXACTLY:
+     * user_id: 1d112896-626d-4dc7-a758-0e5bec83fe6c
+     * email: frankwebber33@hotmail.com
+     * nome: Frank Webber
+     * role: instrutor
+     * created_at: [click the calendar icon and select current date/time]
+     * updated_at: [click the calendar icon and select current date/time]
+   - Click "Save"
+
+4. RESTART YOUR DEVELOPMENT SERVER:
+   ===============================
+   - In your terminal, stop the current server (Ctrl+C)
+   - Run: npm run dev:all
+
+5. LOGIN TO YOUR APPLICATION:
+   =========================
+   - Go to: http://localhost:8080/auth
+   - Enter your credentials:
+     * Email: frankwebber33@hotmail.com
+     * Password: senha123
+   - Click "Login"
+
+SUCCESS! You should now be able to log in without the "Invalid login credentials" error.
+
+If you still have issues:
+1. Double-check that you used the EXACT user_id: 1d112896-626d-4dc7-a758-0e5bec83fe6c
+2. Make sure all fields are filled in correctly
+3. Verify that the profile was saved successfully in the table

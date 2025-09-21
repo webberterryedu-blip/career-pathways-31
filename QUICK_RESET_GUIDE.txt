@@ -1,0 +1,25 @@
+QUICK PASSWORD RESET FOR frankwebber33@hotmail.com
+
+1. OPEN SUPABASE DASHBOARD:
+   Go to: https://app.supabase.com/project/jbapewpuvfijrkhlbsid
+
+2. NAVIGATE TO USERS:
+   Click "Authentication" in left menu
+   Click "Users" tab
+
+3. FIND YOUR USER:
+   Locate "frankwebber33@hotmail.com" in the user list
+
+4. RESET PASSWORD:
+   Click the three dots (•••) next to your email
+   Select "Reset Password" from the dropdown menu
+   Enter a new password: Test1234!
+   Click "Reset Password"
+
+5. TEST LOGIN:
+   Go back to your application
+   Use email: frankwebber33@hotmail.com
+   Use password: Test1234!
+   Click "Entrar"
+
+This will immediately resolve your "Invalid login credentials" error.

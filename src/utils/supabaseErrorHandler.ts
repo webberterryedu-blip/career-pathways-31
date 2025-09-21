@@ -1,5 +1,5 @@
 import { logger } from '@/utils/logger';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Supabase Error Handler

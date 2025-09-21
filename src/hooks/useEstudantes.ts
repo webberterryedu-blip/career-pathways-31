@@ -29,22 +29,23 @@ export function useEstudantes() {
 
       console.log('Fetching estudantes from Supabase...');
 
-      const { data: estudantesData, error: estudantesError } = await supabase
-        .from('estudantes')
-        .select(`
-          id,
-          genero,
-          qualificacoes,
-          ativo,
-          profile_id,
-          profiles!inner (
-            id,
-            nome,
-            email,
-            telefone
-          )
-        `)
+      // First try the view
+      let { data: estudantesData, error: estudantesError } = await supabase
+        .from('vw_estudantes_grid')
+        .select('*')
         .eq('ativo', true);
+
+      // If view doesn't exist, fall back to direct table query
+      if (estudantesError && estudantesError.message.includes('relation "vw_estudantes_grid" does not exist')) {
+        console.log('vw_estudantes_grid view not found, falling back to direct table query...');
+        ({ data: estudantesData, error: estudantesError } = await supabase
+          .from('estudantes')
+          .select(`
+            *,
+            profiles (id, nome, email, telefone, cargo)
+          `)
+          .eq('ativo', true));
+      }
 
       if (estudantesError) {
         console.error('Error fetching estudantes:', estudantesError);
@@ -60,17 +61,20 @@ export function useEstudantes() {
 
       // Transform the data
       const transformedEstudantes = estudantesData.map((estudante: any) => {
-        const profile = estudante.profiles;
+        // Handle both view and direct table formats
+        const profileData = estudante.profiles || {};
+        
         return {
           id: estudante.id,
-          nome: profile?.nome || 'Nome não informado',
+          nome: estudante.nome || profileData.nome || 'Nome não informado',
           genero: estudante.genero,
           qualificacoes: estudante.qualificacoes || [],
           ativo: estudante.ativo,
-          email: profile?.email,
-          telefone: profile?.telefone,
-          profile_id: estudante.profile_id,
-        };
+          email: estudante.email || profileData.email || null,
+          telefone: estudante.telefone || profileData.telefone || null,
+          profile_id: estudante.profile_id || profileData.id || estudante.id,
+          congregacao_id: estudante.congregacao_id || null,
+        } as Estudante;
       });
 
       console.log(`Successfully loaded ${transformedEstudantes.length} estudantes`);

@@ -1,118 +1,125 @@
--- Fix database schema issues
--- Run this in Supabase SQL Editor
+-- =====================================================
+-- FIX DATABASE SCHEMA ISSUES
+-- =====================================================
 
--- 1. Create or update programas table with correct schema
-CREATE TABLE IF NOT EXISTS programas (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  titulo TEXT NOT NULL,
-  data DATE NOT NULL,
-  semana TEXT,
-  conteudo JSONB,
-  status TEXT DEFAULT 'draft',
-  created_by UUID REFERENCES auth.users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- First, let's check the current state of the profiles table
+\d public.profiles;
 
--- 2. Add missing columns if they don't exist
-DO $$ 
+-- Check the current state of the estudantes table
+\d public.estudantes;
+
+-- If the profiles table doesn't exist or is missing the user_id column, create/fix it
+DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'programas' AND column_name = 'data') THEN
-    ALTER TABLE programas ADD COLUMN data DATE NOT NULL DEFAULT CURRENT_DATE;
-  END IF;
-  
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'programas' AND column_name = 'titulo') THEN
-    ALTER TABLE programas ADD COLUMN titulo TEXT NOT NULL DEFAULT '';
+  -- Check if profiles table exists
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'profiles') THEN
+    CREATE TABLE public.profiles (
+      id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+      user_id UUID UNIQUE REFERENCES auth.users ON DELETE CASCADE,
+      nome TEXT,
+      email TEXT,
+      role TEXT,
+      cargo TEXT,
+      created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+      updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+    );
+  ELSE
+    -- Check if user_id column exists
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'user_id') THEN
+      ALTER TABLE public.profiles ADD COLUMN user_id UUID UNIQUE REFERENCES auth.users ON DELETE CASCADE;
+    END IF;
+    
+    -- Check if role column exists
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+      ALTER TABLE public.profiles ADD COLUMN role TEXT;
+    END IF;
   END IF;
 END $$;
 
--- 3. Enable RLS
-ALTER TABLE programas ENABLE ROW LEVEL SECURITY;
+-- Fix the estudantes table to ensure it has the correct relationship with profiles
+DO $$
+BEGIN
+  -- Check if estudantes table exists
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'estudantes') THEN
+    -- Check if profile_id column exists (from older schema)
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'estudantes' AND column_name = 'profile_id') THEN
+      -- Add user_id column if it doesn't exist
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'estudantes' AND column_name = 'user_id') THEN
+        ALTER TABLE public.estudantes ADD COLUMN user_id UUID REFERENCES auth.users ON DELETE CASCADE;
+      END IF;
+    ELSE
+      -- If profile_id doesn't exist, ensure user_id exists
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'estudantes' AND column_name = 'user_id') THEN
+        ALTER TABLE public.estudantes ADD COLUMN user_id UUID REFERENCES auth.users ON DELETE CASCADE;
+      END IF;
+    END IF;
+  END IF;
+END $$;
 
--- 4. Create RLS policies for programas
-DROP POLICY IF EXISTS "Admin can do everything on programas" ON programas;
-CREATE POLICY "Admin can do everything on programas" ON programas
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM profiles 
-      WHERE profiles.id = auth.uid() 
-      AND profiles.role = 'admin'
-    )
-  );
+-- Create or update the handle_new_user function to work with the current schema
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Insert into profiles table
+  INSERT INTO public.profiles (user_id, nome, email)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data ->> 'full_name', NEW.raw_user_meta_data ->> 'name', SPLIT_PART(NEW.email, '@', 1)),
+    NEW.email
+  )
+  ON CONFLICT (user_id) DO UPDATE SET
+    nome = EXCLUDED.nome,
+    email = EXCLUDED.email,
+    updated_at = NOW();
+    
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-DROP POLICY IF EXISTS "Instructors can read programas" ON programas;
-CREATE POLICY "Instructors can read programas" ON programas
+-- Ensure the trigger exists
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Enable Row Level Security if not already enabled
+ALTER TABLE IF EXISTS public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.estudantes ENABLE ROW LEVEL SECURITY;
+
+-- Create or update RLS policies for profiles
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
+CREATE POLICY "Users can view their own profile" ON public.profiles
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+CREATE POLICY "Users can update their own profile" ON public.profiles
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+CREATE POLICY "Users can insert their own profile" ON public.profiles
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Create or update RLS policies for estudantes
+DROP POLICY IF EXISTS "Users can view their own students" ON public.estudantes;
+CREATE POLICY "Users can view their own students" ON public.estudantes
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM profiles 
-      WHERE profiles.id = auth.uid() 
-      AND profiles.role IN ('admin', 'instrutor')
-    )
+    user_id = auth.uid() OR
+    EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('instrutor', 'admin'))
   );
 
--- 5. Ensure profiles table has correct structure
-CREATE TABLE IF NOT EXISTS profiles (
-  id UUID REFERENCES auth.users(id) PRIMARY KEY,
-  nome_completo TEXT,
-  congregacao TEXT,
-  cargo TEXT,
-  role user_role DEFAULT 'instrutor',
-  date_of_birth DATE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 6. Create user_role enum if it doesn't exist
-DO $$ 
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-    CREATE TYPE user_role AS ENUM ('admin', 'instrutor', 'estudante', 'family_member');
-  END IF;
-END $$;
-
--- 7. Enable RLS on profiles
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
--- 8. Create RLS policies for profiles
-DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
-CREATE POLICY "Users can view own profile" ON profiles
-  FOR SELECT USING (auth.uid() = id);
-
-DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
-CREATE POLICY "Users can update own profile" ON profiles
-  FOR UPDATE USING (auth.uid() = id);
-
-DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
-CREATE POLICY "Users can insert own profile" ON profiles
-  FOR INSERT WITH CHECK (auth.uid() = id);
-
--- 9. Admin policies for profiles
-DROP POLICY IF EXISTS "Admin can do everything on profiles" ON profiles;
-CREATE POLICY "Admin can do everything on profiles" ON profiles
+DROP POLICY IF EXISTS "Instructors can manage students" ON public.estudantes;
+CREATE POLICY "Instructors can manage students" ON public.estudantes
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM profiles 
-      WHERE profiles.id = auth.uid() 
-      AND profiles.role = 'admin'
-    )
+    EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid() AND role IN ('instrutor', 'admin'))
   );
 
--- 10. Create admin user if not exists
-INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
-VALUES (
-  gen_random_uuid(),
-  'amazonwebber007@gmail.com',
-  crypt('admin123', gen_salt('bf')),
-  NOW(),
-  NOW(),
-  NOW(),
-  '{"provider": "email", "providers": ["email"]}',
-  '{"role": "admin", "nome_completo": "Admin", "congregacao": "Sistema"}'
-) ON CONFLICT (email) DO NOTHING;
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON public.profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_estudantes_user_id ON public.estudantes(user_id);
 
--- 11. Ensure admin profile exists
-INSERT INTO profiles (id, nome_completo, congregacao, cargo, role)
-SELECT id, 'Admin', 'Sistema', 'Administrador', 'admin'::user_role
-FROM auth.users 
-WHERE email = 'amazonwebber007@gmail.com'
-ON CONFLICT (id) DO UPDATE SET role = 'admin'::user_role;
+-- Refresh the schema cache
+NOTIFY pgrst, 'reload schema';
+
+-- Test the fix by checking the structure
+\d public.profiles;
+\d public.estudantes;

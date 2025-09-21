@@ -20,9 +20,16 @@ const app = express();
 const envPort = parseInt(process.env.PORT || '', 10);
 const PORT = Number.isFinite(envPort) && envPort > 0 ? envPort : 3000;
 
+// CORS configuration
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || 'http://localhost:8080',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 

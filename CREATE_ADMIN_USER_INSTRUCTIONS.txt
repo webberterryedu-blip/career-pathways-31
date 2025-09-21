@@ -1,0 +1,65 @@
+🚨 CREATE ADMIN USER - IMMEDIATE SOLUTION 🚨
+
+FOLLOW THESE EXACT STEPS TO CREATE YOUR FIRST USER:
+
+1. OPEN SUPABASE DASHBOARD:
+   =======================
+   URL: https://app.supabase.com/project/jbapewpuvfijrkhlbsid
+   Sign in with your Supabase account credentials
+
+2. DISABLE EMAIL CONFIRMATION:
+   ==========================
+   - In the left sidebar, click "Authentication"
+   - Click "Settings" tab
+   - Find "Enable email confirmations" toggle
+   - Switch it to OFF (gray position)
+   - Scroll down and click "Save"
+
+3. CREATE YOUR FIRST ADMIN USER:
+   ===========================
+   - In the left sidebar, click "Authentication" > "Users"
+   - Click the "New User" green button
+   - Enter EXACTLY:
+     * Email: admin@example.com
+     * Password: Admin123!
+   - CHECK the "Email confirmed" box (this is crucial!)
+   - Click "Save"
+
+4. GET THE USER ID:
+   ================
+   - After creating the user, you'll see it in the users list
+   - Copy the User ID (it's a long UUID string)
+
+5. CREATE A PROFILE FOR THE USER:
+   ============================
+   - In the left sidebar, click "Table Editor"
+   - Click on the "profiles" table
+   - Click "Insert" to add a new row
+   - Fill in:
+     * user_id: [PASTE THE USER ID YOU COPIED]
+     * email: admin@example.com
+     * nome: Admin User
+     * role: admin
+     * created_at: [click the calendar icon and select current date/time]
+     * updated_at: [click the calendar icon and select current date/time]
+   - Click "Save"
+
+6. RESTART YOUR DEVELOPMENT SERVER:
+   ===============================
+   - In your terminal, stop the current server (Ctrl+C)
+   - Run: npm run dev:all
+
+7. LOGIN TO YOUR APPLICATION:
+   =========================
+   - Go to: http://localhost:8080/auth
+   - Enter credentials:
+     * Email: admin@example.com
+     * Password: Admin123!
+   - Click "Login"
+
+SUCCESS! You should now be able to log in without the "Invalid login credentials" error.
+
+If you still have issues:
+1. Double-check that you used EXACT credentials
+2. Make sure you checked "Email confirmed" when creating the user
+3. Verify that the profile has the correct user_id matching the auth user ID

@@ -54,8 +54,7 @@ export default defineConfig({
               },
             },
           },
-        ],
-        ],
+        ]
       },
       manifest: {
         name: 'Sistema Ministerial',

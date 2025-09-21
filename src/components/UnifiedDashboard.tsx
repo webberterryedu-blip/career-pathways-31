@@ -41,7 +41,7 @@ import {
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useJWorgIntegration } from '@/hooks/useJWorgIntegration';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import UnifiedNavigation from './UnifiedNavigation';
 import ProgramFlowGuide from '@/components/programs/ProgramFlowGuide';
 import UnifiedBreadcrumbs from './UnifiedBreadcrumbs';
@@ -354,7 +354,7 @@ export default function UnifiedDashboard() {
               <div>
                 <h1 className="text-3xl font-bold">Dashboard do Instrutor</h1>
                 <p className="text-muted-foreground mt-1">
-                  {profile.congregacao_id || 'Sua Congregação'} - Gestão Local
+                  {profile.congregacao || 'Sua Congregação'} - Gestão Local
                 </p>
               </div>
             </div>

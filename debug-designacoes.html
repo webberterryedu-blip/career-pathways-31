@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Designações</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+        .loading { background-color: #fff3cd; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Debug Sistema Designações</h1>
+    
+    <div id="test-frontend" class="test loading">
+        <h3>1. Frontend (localhost:8080)</h3>
+        <p id="frontend-result">Testing...</p>
+    </div>
+    
+    <div id="test-backend" class="test loading">
+        <h3>2. Backend (localhost:3001)</h3>
+        <p id="backend-result">Testing...</p>
+    </div>
+    
+    <div id="test-programs" class="test loading">
+        <h3>3. Programs API</h3>
+        <p id="programs-result">Testing...</p>
+        <pre id="programs-data"></pre>
+    </div>
+    
+    <div id="test-designacoes" class="test loading">
+        <h3>4. Designações API</h3>
+        <p id="designacoes-result">Testing...</p>
+    </div>
+
+    <script>
+        // Test Frontend
+        async function testFrontend() {
+            try {
+                const response = await fetch('http://localhost:8080');
+                if (response.ok) {
+                    document.getElementById('frontend-result').textContent = '✅ Frontend OK';
+                    document.getElementById('test-frontend').className = 'test success';
+                } else {
+                    throw new Error(`Status: ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('frontend-result').textContent = `❌ Frontend Error: ${error.message}`;
+                document.getElementById('test-frontend').className = 'test error';
+            }
+        }
+
+        // Test Backend
+        async function testBackend() {
+            try {
+                const response = await fetch('http://localhost:3001/api/status');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('backend-result').textContent = `✅ Backend OK - ${data.description}`;
+                    document.getElementById('test-backend').className = 'test success';
+                } else {
+                    throw new Error(`Status: ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('backend-result').textContent = `❌ Backend Error: ${error.message}`;
+                document.getElementById('test-backend').className = 'test error';
+            }
+        }
+
+        // Test Programs API
+        async function testPrograms() {
+            try {
+                const response = await fetch('http://localhost:3001/api/programacoes/mock');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('programs-result').textContent = `✅ Programs OK - ${data.length} programs loaded`;
+                    document.getElementById('programs-data').textContent = JSON.stringify(data.slice(0, 2), null, 2);
+                    document.getElementById('test-programs').className = 'test success';
+                } else {
+                    throw new Error(`Status: ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('programs-result').textContent = `❌ Programs Error: ${error.message}`;
+                document.getElementById('test-programs').className = 'test error';
+            }
+        }
+
+        // Test Designações API
+        async function testDesignacoes() {
+            try {
+                const response = await fetch('http://localhost:3001/api/designacoes/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('supabase.auth.token') || 'test'}`
+                    },
+                    body: JSON.stringify({
+                        programacao_id: '2026-01-05',
+                        congregacao_id: 'test-cong'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('designacoes-result').textContent = `✅ Designações API OK - ${data.designacoes?.length || 0} assignments generated`;
+                    document.getElementById('test-designacoes').className = 'test success';
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`Status: ${response.status} - ${errorText}`);
+                }
+            } catch (error) {
+                document.getElementById('designacoes-result').textContent = `❌ Designações Error: ${error.message}`;
+                document.getElementById('test-designacoes').className = 'test error';
+            }
+        }
+
+        // Run all tests
+        testFrontend();
+        testBackend();
+        testPrograms();
+        testDesignacoes();
+    </script>
+</body>
+</html>

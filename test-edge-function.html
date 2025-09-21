@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Supabase Edge Function - list-programs-json</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 2rem auto; 
+            padding: 1rem; 
+            background: #f5f5f5;
+        }
+        .container { 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result { 
+            background: #f8f9fa; 
+            padding: 1rem; 
+            border-radius: 4px; 
+            border-left: 4px solid #007bff;
+            margin: 1rem 0;
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 0.75rem 1.5rem; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 1rem;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { 
+            background: #6c757d; 
+            cursor: not-allowed; 
+        }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .success { border-left-color: #28a745; background: #d4edda; }
+        pre { 
+            background: #f1f1f1; 
+            padding: 1rem; 
+            border-radius: 4px; 
+            overflow-x: auto; 
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Test Supabase Edge Function: list-programs-json</h1>
+        <p>Este teste verifica se a Edge Function <code>list-programs-json</code> está funcionando corretamente e resolvendo o erro CORS.</p>
+        
+        <button id="testBtn" onclick="testEdgeFunction()">🧪 Testar Edge Function</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testEdgeFunction() {
+            const resultDiv = document.getElementById('result');
+            const testBtn = document.getElementById('testBtn');
+            
+            // Clear previous results
+            resultDiv.innerHTML = '';
+            testBtn.disabled = true;
+            testBtn.textContent = '⏳ Testando...';
+            
+            try {
+                // Replace with actual project URL when known
+                const supabaseUrl = 'https://dlvojolvdsqrfczjjjuw.supabase.co';
+                const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsdm9qb2x2ZHNxcmZjempqanV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE0MDcyNzMsImV4cCI6MjA0Njk4MzI3M30.nUrN2bCd-pX6bJOV1fTxhI8CamBW1yZpFQLX6qTLzsk';
+                
+                // Test CORS preflight
+                resultDiv.innerHTML += '<div class="test-result">🔍 Testando CORS preflight (OPTIONS)...</div>';
+                
+                const preflightResponse = await fetch(`${supabaseUrl}/functions/v1/list-programs-json`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': 'http://localhost:5173',
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'authorization, content-type'
+                    }
+                });
+                
+                if (preflightResponse.ok) {
+                    resultDiv.innerHTML += '<div class="test-result success">✅ CORS preflight OK!</div>';
+                } else {
+                    resultDiv.innerHTML += `<div class="test-result error">❌ CORS preflight failed: ${preflightResponse.status}</div>`;
+                }
+                
+                // Test actual function call
+                resultDiv.innerHTML += '<div class="test-result">🔍 Testando chamada da function...</div>';
+                
+                const response = await fetch(`${supabaseUrl}/functions/v1/list-programs-json`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${anonKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ limit: 10 })
+                });
+                
+                const responseText = await response.text();
+                
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(responseText);
+                        resultDiv.innerHTML += '<div class="test-result success">✅ Function executada com sucesso!</div>';
+                        resultDiv.innerHTML += `<div class="test-result">
+                            <strong>📊 Resultado:</strong>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>`;
+                    } catch (e) {
+                        resultDiv.innerHTML += '<div class="test-result error">❌ Resposta não é JSON válido</div>';
+                        resultDiv.innerHTML += `<div class="test-result"><pre>${responseText}</pre></div>`;
+                    }
+                } else {
+                    resultDiv.innerHTML += `<div class="test-result error">❌ Function falhou: ${response.status} ${response.statusText}</div>`;
+                    resultDiv.innerHTML += `<div class="test-result"><pre>${responseText}</pre></div>`;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="test-result error">❌ Erro de rede: ${error.message}</div>`;
+                console.error('Test error:', error);
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = '🧪 Testar Edge Function';
+            }
+        }
+        
+        // Auto-run test on page load
+        window.addEventListener('load', () => {
+            setTimeout(testEdgeFunction, 500);
+        });
+    </script>
+</body>
+</html>

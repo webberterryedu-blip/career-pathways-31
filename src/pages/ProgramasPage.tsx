@@ -261,59 +261,125 @@ const ProgramasPage = () => {
     // carregarPDFsDisponiveis();
   }, []);
 
-  // Carregar programas reais dos arquivos JSON (via backend simplificado)
+  // Carregar programas reais dos arquivos JSON (via Supabase Edge Function)
   const carregarProgramasReais = async () => {
     try {
-      // Try backend API to get all available programs
-      const response = await fetch('http://localhost:3001/api/programacoes/mock');
-      if (!response.ok) {
-        throw new Error('Backend API não disponível');
-      }
+      // Try Supabase Edge Function first
+      console.log('Trying Edge Function for programs...');
+      const { data, error } = await supabase.functions.invoke('list-programs-json');
 
-      const data = await response.json();
-      if (!Array.isArray(data)) {
-        console.warn('Dados inesperados do backend:', data);
+      if (data && data.success && Array.isArray(data.data)) {
+        const programasConvertidos = data.data.map((programaData: any) => {
+          // Handle direct database format from Edge Function
+          if (programaData.data_inicio_semana) {
+            return {
+              id: programaData.data_inicio_semana,
+              semana: programaData.semana || programaData.data_inicio_semana,
+              data_inicio: programaData.data_inicio_semana,
+              mes_ano: programaData.mes_apostila || 'Programa Ministerial',
+              tema: programaData.mes_apostila,
+              partes: programaData.partes || [],
+              criado_em: programaData.created_at || new Date().toISOString(),
+              atualizado_em: programaData.updated_at || new Date().toISOString()
+            };
+          }
+          
+          // Handle converted format (legacy)
+          return {
+            id: programaData.idSemana,
+            semana: programaData.semanaLabel,
+            data_inicio: programaData.idSemana,
+            mes_ano: programaData.tema || 'Programa Ministerial',
+            tema: programaData.tema,
+            partes: (programaData.programacao || []).flatMap((secao: any) => 
+              (secao.partes || []).map((parte: any) => ({
+                numero: parte.idParte,
+                titulo: parte.titulo,
+                tempo: parte.duracaoMin,
+                tipo: parte.tipo,
+                secao: secao.secao,
+                referencia: Array.isArray(parte.referencias) ? parte.referencias.join('; ') : parte.referencia,
+                instrucoes: parte.instrucoes
+              }))
+            ),
+            criado_em: new Date().toISOString(),
+            atualizado_em: new Date().toISOString()
+          };
+        });
+
+        // Sort programs by date (newest first)
+        const sortedPrograms = programasConvertidos.sort((a, b) => 
+          new Date(b.data_inicio || '').getTime() - new Date(a.data_inicio || '').getTime()
+        );
+
+        setProgramas(sortedPrograms);
+        toast({
+          title: "Programas carregados",
+          description: `${programasConvertidos.length} programa(s) carregado(s) via Supabase Edge Function.`
+        });
         return;
       }
+      
+      if (error) {
+        console.warn('Edge Function error, falling back to backend API:', error);
+        throw new Error('Edge Function not available');
+      }
+    } catch (edgeFunctionError) {
+      console.warn('Edge Function failed, trying backend API...', edgeFunctionError);
+      
+      try {
+        // Fallback to backend API
+        const response = await fetch('http://localhost:3001/api/programacoes/mock');
+        if (!response.ok) {
+          throw new Error(`Backend API error: ${response.status}`);
+        }
 
-      const programasConvertidos = data.map((programaData: any) => ({
-        id: programaData.idSemana,
-        semana: programaData.semanaLabel,
-        data_inicio: programaData.idSemana,
-        mes_ano: programaData.tema || 'Programa Ministerial',
-        tema: programaData.tema,
-        partes: (programaData.programacao || []).flatMap((secao: any) => 
-          (secao.partes || []).map((parte: any) => ({
-            numero: parte.idParte,
-            titulo: parte.titulo,
-            tempo: parte.duracaoMin,
-            tipo: parte.tipo,
-            secao: secao.secao,
-            referencia: Array.isArray(parte.referencias) ? parte.referencias.join('; ') : parte.referencia,
-            instrucoes: parte.instrucoes
-          }))
-        ),
-        criado_em: new Date().toISOString(),
-        atualizado_em: new Date().toISOString()
-      }));
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+          console.warn('Dados inesperados do backend:', data);
+          throw new Error('Formato de dados inesperado do backend');
+        }
 
-      // Sort programs by date (newest first)
-      const sortedPrograms = programasConvertidos.sort((a, b) => 
-        new Date(b.data_inicio || '').getTime() - new Date(a.data_inicio || '').getTime()
-      );
+        const programasConvertidos = data.map((programaData: any) => ({
+          id: programaData.idSemana,
+          semana: programaData.semanaLabel,
+          data_inicio: programaData.idSemana,
+          mes_ano: programaData.tema || 'Programa Ministerial',
+          tema: programaData.tema,
+          partes: (programaData.programacao || []).flatMap((secao: any) => 
+            (secao.partes || []).map((parte: any) => ({
+              numero: parte.idParte,
+              titulo: parte.titulo,
+              tempo: parte.duracaoMin,
+              tipo: parte.tipo,
+              secao: secao.secao,
+              referencia: Array.isArray(parte.referencias) ? parte.referencias.join('; ') : parte.referencia,
+              instrucoes: parte.instrucoes
+            }))
+          ),
+          criado_em: new Date().toISOString(),
+          atualizado_em: new Date().toISOString()
+        }));
 
-      setProgramas(sortedPrograms);
-      toast({
-        title: "Programas carregados",
-        description: `${programasConvertidos.length} programa(s) carregado(s) dos arquivos JSON.`
-      });
-    } catch (error) {
-      console.error('Erro ao carregar programas:', error);
-      toast({
-        title: "Erro ao carregar programas",
-        description: "Não foi possível carregar os programas dos arquivos JSON.",
-        variant: "destructive"
-      });
+        // Sort programs by date (newest first)
+        const sortedPrograms = programasConvertidos.sort((a, b) => 
+          new Date(b.data_inicio || '').getTime() - new Date(a.data_inicio || '').getTime()
+        );
+
+        setProgramas(sortedPrograms);
+        toast({
+          title: "Programas carregados",
+          description: `${programasConvertidos.length} programa(s) carregado(s) dos arquivos JSON.`
+        });
+        return;
+      } catch (backendError) {
+        console.error('Erro no fallback para backend API:', backendError);
+        toast({
+          title: "Erro ao carregar programas",
+          description: "Não foi possível carregar os programas dos arquivos JSON.",
+          variant: "destructive"
+        });
+      }
     }
   };
 

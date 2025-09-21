@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Test & Setup</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #e2e3e5; border-color: #d6d8db; }
+        input, button {
+            margin: 5px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Authentication Test & Setup</h1>
+    
+    <div class="container info">
+        <h3>Supabase Connection Test</h3>
+        <button onclick="testConnection()">Test Connection</button>
+        <div id="connection-result"></div>
+    </div>
+
+    <div class="container info">
+        <h3>Create Test Users</h3>
+        <p>This will create the test users defined in the system:</p>
+        <ul>
+            <li><strong>Instructor:</strong> frankwebber33@hotmail.com (password: 13a21r15)</li>
+            <li><strong>Student:</strong> franklinmarceloferreiradelima@gmail.com (password: 13a21r15)</li>
+        </ul>
+        <button onclick="createTestUsers()">Create Test Users</button>
+        <div id="create-users-result"></div>
+    </div>
+
+    <div class="container info">
+        <h3>Manual Login Test</h3>
+        <div>
+            <input type="email" id="email" placeholder="Email" value="frankwebber33@hotmail.com">
+            <input type="password" id="password" placeholder="Password" value="13a21r15">
+            <button onclick="testLogin()">Test Login</button>
+        </div>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="container info">
+        <h3>Check Existing Users</h3>
+        <button onclick="checkUsers()">Check Users in Database</button>
+        <div id="users-result"></div>
+    </div>
+
+    <div class="container info">
+        <h3>Activity Log</h3>
+        <div id="log" class="log"></div>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://jbapewpuvfijrkhlbsid.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiYXBld3B1dmZpanJraGxic2lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNzQ4NzcsImV4cCI6MjA3Mzk1MDg3N30.kaj9f-oVMlpzddZbBilbU81grVVpmLjKKmUG-zpKoSg';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+        }
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        async function testConnection() {
+            log('Testing Supabase connection...');
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                if (error) {
+                    log(`Connection error: ${error.message}`);
+                    showResult('connection-result', `Error: ${error.message}`, 'error');
+                } else {
+                    log('Connection successful');
+                    showResult('connection-result', 'Connection successful!', 'success');
+                }
+            } catch (error) {
+                log(`Connection failed: ${error.message}`);
+                showResult('connection-result', `Failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function createTestUsers() {
+            log('Creating test users...');
+            const results = [];
+
+            // Test user 1: Instructor
+            try {
+                log('Creating instructor user...');
+                const { data: instructorData, error: instructorError } = await supabase.auth.signUp({
+                    email: 'frankwebber33@hotmail.com',
+                    password: '13a21r15',
+                    options: {
+                        data: {
+                            nome: 'Frank Webber',
+                            role: 'instrutor'
+                        }
+                    }
+                });
+
+                if (instructorError) {
+                    if (instructorError.message.includes('already registered')) {
+                        log('Instructor user already exists');
+                        results.push('✓ Instructor user already exists');
+                    } else {
+                        log(`Error creating instructor: ${instructorError.message}`);
+                        results.push(`✗ Instructor error: ${instructorError.message}`);
+                    }
+                } else {
+                    log('Instructor user created successfully');
+                    results.push('✓ Instructor user created successfully');
+                }
+            } catch (error) {
+                log(`Instructor creation failed: ${error.message}`);
+                results.push(`✗ Instructor failed: ${error.message}`);
+            }
+
+            // Test user 2: Student
+            try {
+                log('Creating student user...');
+                const { data: studentData, error: studentError } = await supabase.auth.signUp({
+                    email: 'franklinmarceloferreiradelima@gmail.com',
+                    password: '13a21r15',
+                    options: {
+                        data: {
+                            nome: 'Franklin Marcelo',
+                            role: 'estudante'
+                        }
+                    }
+                });
+
+                if (studentError) {
+                    if (studentError.message.includes('already registered')) {
+                        log('Student user already exists');
+                        results.push('✓ Student user already exists');
+                    } else {
+                        log(`Error creating student: ${studentError.message}`);
+                        results.push(`✗ Student error: ${studentError.message}`);
+                    }
+                } else {
+                    log('Student user created successfully');
+                    results.push('✓ Student user created successfully');
+                }
+            } catch (error) {
+                log(`Student creation failed: ${error.message}`);
+                results.push(`✗ Student failed: ${error.message}`);
+            }
+
+            showResult('create-users-result', results.join('<br>'), 'info');
+            log('Test users creation completed');
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showResult('login-result', 'Please enter both email and password', 'error');
+                return;
+            }
+
+            log(`Attempting login for: ${email}`);
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    log(`Login error: ${error.message}`);
+                    showResult('login-result', `Login failed: ${error.message}`, 'error');
+                } else {
+                    log('Login successful');
+                    showResult('login-result', `Login successful! User ID: ${data.user.id}`, 'success');
+                    
+                    // Sign out immediately for testing
+                    setTimeout(async () => {
+                        await supabase.auth.signOut();
+                        log('Signed out for testing purposes');
+                    }, 2000);
+                }
+            } catch (error) {
+                log(`Login failed: ${error.message}`);
+                showResult('login-result', `Login failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkUsers() {
+            log('Checking users in database...');
+            try {
+                const { data: profiles, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .limit(10);
+
+                if (error) {
+                    log(`Error fetching profiles: ${error.message}`);
+                    showResult('users-result', `Error: ${error.message}`, 'error');
+                } else {
+                    log(`Found ${profiles.length} profiles`);
+                    const userList = profiles.map(p => 
+                        `${p.nome || p.email} (${p.role || 'no role'}) - ${p.email}`
+                    ).join('<br>');
+                    showResult('users-result', userList || 'No profiles found', 'info');
+                }
+            } catch (error) {
+                log(`Failed to check users: ${error.message}`);
+                showResult('users-result', `Failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-test connection on page load
+        window.onload = function() {
+            testConnection();
+            log('Page loaded, ready for testing');
+        };
+    </script>
+</body>
+</html>
