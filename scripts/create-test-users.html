@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Test Users</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .user-form {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background: #000;
+            color: #00ff00;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { color: #55ff55; }
+        .error { color: #ff5555; }
+        .warning { color: #ffff55; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create Test Users for Sistema Ministerial</h1>
+        <p>This tool creates the test users needed for authentication testing.</p>
+        
+        <div class="user-form">
+            <h3>Instructor Account</h3>
+            <p><strong>Email:</strong> frankwebber33@hotmail.com</p>
+            <p><strong>Password:</strong> 13a21r15</p>
+            <p><strong>Name:</strong> Mauro Frank Lima de Lima</p>
+            <p><strong>Role:</strong> Instrutor</p>
+            <button onclick="createInstructor()">Create Instructor</button>
+        </div>
+        
+        <div class="user-form">
+            <h3>Student Account</h3>
+            <p><strong>Email:</strong> franklinmarceloferreiradelima@gmail.com</p>
+            <p><strong>Password:</strong> 13a21r15</p>
+            <p><strong>Name:</strong> Franklin Marcelo Ferreira de Lima</p>
+            <p><strong>Role:</strong> Instrutor (students use instrutor role)</p>
+            <button onclick="createStudent()">Create Student</button>
+        </div>
+        
+        <button onclick="createBothUsers()">Create Both Users</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+        
+        <div id="logs" class="log"></div>
+
+        <script type="module">
+            import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js';
+            
+            const SUPABASE_URL = 'https://jbapewpuvfijrkhlbsid.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiYXBld3B1dmZpanJraGxic2lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNzQ4NzcsImV4cCI6MjA3Mzk1MDg3N30.kaj9f-oVMlpzddZbBilbU81grVVpmLjKKmUG-zpKoSg';
+            
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            
+            function log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${message}`;
+                
+                const logElement = document.getElementById('logs');
+                const span = document.createElement('span');
+                span.className = type;
+                span.textContent = logEntry + '\n';
+                logElement.appendChild(span);
+                logElement.scrollTop = logElement.scrollHeight;
+                
+                console.log(logEntry);
+            }
+            
+            window.clearLogs = function() {
+                document.getElementById('logs').innerHTML = '';
+            }
+            
+            async function signUpUser(email, password, userData) {
+                try {
+                    log(`Creating user: ${email}...`);
+                    
+                    const { data, error } = await supabase.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            emailRedirectTo: `${window.location.origin}/`,
+                            data: userData
+                        }
+                    });
+                    
+                    if (error) {
+                        log(`❌ Failed to create ${email}: ${error.message}`, 'error');
+                        return false;
+                    }
+                    
+                    if (data.user) {
+                        log(`✅ User created successfully: ${email}`, 'success');
+                        log(`   User ID: ${data.user.id}`, 'success');
+                        if (data.session) {
+                            log(`   Session created: Yes`, 'success');
+                        } else {
+                            log(`   Session created: No (email confirmation may be required)`, 'warning');
+                        }
+                        return true;
+                    }
+                    
+                    log(`⚠️ User creation returned no data for ${email}`, 'warning');
+                    return false;
+                    
+                } catch (error) {
+                    log(`❌ Exception creating ${email}: ${error.message}`, 'error');
+                    return false;
+                }
+            }
+            
+            window.createInstructor = async function() {
+                await signUpUser(
+                    'frankwebber33@hotmail.com',
+                    '13a21r15',
+                    {
+                        nome_completo: 'Mauro Frank Lima de Lima',
+                        congregacao: 'Congregação Central',
+                        cargo: 'conselheiro_assistente',
+                        role: 'instrutor'
+                    }
+                );
+            }
+            
+            window.createStudent = async function() {
+                await signUpUser(
+                    'franklinmarceloferreiradelima@gmail.com',
+                    '13a21r15',
+                    {
+                        nome_completo: 'Franklin Marcelo Ferreira de Lima',
+                        congregacao: 'Congregação Central',
+                        cargo: 'publicador_nao_batizado',
+                        role: 'instrutor'  // Using instrutor role since estudante doesn't exist in enum
+                    }
+                );
+            }
+            
+            window.createBothUsers = async function() {
+                log('🚀 Starting bulk user creation...', 'success');
+                
+                const instructor = await window.createInstructor();
+                const student = await window.createStudent();
+                
+                if (instructor && student) {
+                    log('🎉 Both users created successfully!', 'success');
+                    log('You can now test login at: http://localhost:5173/auth', 'success');
+                } else {
+                    log('⚠️ Some users failed to create. Check logs above.', 'warning');
+                }
+            }
+            
+            // Initial setup
+            log('🔧 Test User Creation Tool Ready');
+            log('Project: jbapewpuvfijrkhlbsid');
+            log('Click the buttons above to create test users');
+        </script>
+    </div>
+</body>
+</html>
