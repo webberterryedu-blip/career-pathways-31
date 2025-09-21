@@ -136,6 +136,11 @@ supabase.temp
 docs/Oficial/*.daisy.zip
 docs/Oficial/*.epub
 
+# MCP configuration files with secrets
+*-mcp.json
+api para mcp*.txt
+mcp.json
+
 # Office lock files
 ~$*
 **/~$*

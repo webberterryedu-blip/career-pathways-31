@@ -7,7 +7,7 @@
         "@modelcontextprotocol/server-github"
       ],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     },
     "sequential-thinking": {
@@ -42,7 +42,7 @@
         "@testsprite/testsprite-mcp@latest"
       ],
       "env": {
-        "API_KEY": "sk-user--cjxsK0X5V3MrLDSaQvcdati9OaqDbdh5fdootz88aq8_YAAH2D41ZYAqZbFxuL_DqcBuRJt9mryAW1DAshPIui-ftp4kS0H03Vm9neIdvfXx6OTu2g-5R4dP3afPkchkz0"
+        "API_KEY": "${TESTSPRITE_API_KEY}"
       }
     },
     "supabase": {
@@ -56,7 +56,7 @@
         "--project-ref=jbapewpuvfijrkhlbsid"
       ],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_e00e3dceff5cc626fe57f00071d49fe7ac9a8ad2"
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
       }
     },
     "postgres": {

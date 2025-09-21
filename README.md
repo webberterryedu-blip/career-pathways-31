@@ -105,6 +105,21 @@ npm run test:programs
 npm run test:assignment-generation
 ```
 
+## 🤖 MCP (Model Context Protocol) Configuration
+
+This project uses MCP servers for enhanced AI assistance. To configure:
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+2. Fill in your actual API keys in `.env.local` (never commit this file)
+
+3. The MCP configuration is defined in `mcp-config-fix.json`
+
+**Note**: Never commit actual API keys to version control. The project uses environment variable substitution to keep secrets secure.
+
 ## 🚀 Deployment
 
 ### Frontend
