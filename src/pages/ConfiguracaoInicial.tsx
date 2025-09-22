@@ -34,7 +34,7 @@ const ConfiguracaoInicial = () => {
   // Form data
   const [formData, setFormData] = useState({
     nome: profile?.nome || '',
-    congregacao_id: profile?.congregacao_id || '',
+    congregacao: profile?.congregacao || '',
     cargo: 'instrutor',
     email: profile?.email || '',
     preferences: {
@@ -94,7 +94,7 @@ const ConfiguracaoInicial = () => {
       // Update profile
       const { error } = await updateProfile({
         nome: formData.nome,
-        congregacao_id: formData.congregacao_id
+        congregacao: formData.congregacao
       });
 
       if (error) throw error;
@@ -130,7 +130,7 @@ const ConfiguracaoInicial = () => {
       case 1:
         return formData.nome.trim().length > 0;
       case 2:
-        return formData.congregacao_id.trim().length > 0;
+        return formData.congregacao.trim().length > 0;
       case 3:
         return true; // Preferences are optional
       default:
@@ -260,8 +260,8 @@ const ConfiguracaoInicial = () => {
                     <Label htmlFor="congregacao">{t('initialSetup.fields.congregationName')} *</Label>
                     <Input
                       id="congregacao"
-                      value={formData.congregacao_id}
-                      onChange={(e) => handleInputChange('congregacao_id', e.target.value)}
+                      value={formData.congregacao}
+                      onChange={(e) => handleInputChange('congregacao', e.target.value)}
                       placeholder={t('initialSetup.fields.congregationPlaceholder')}
                       required
                     />

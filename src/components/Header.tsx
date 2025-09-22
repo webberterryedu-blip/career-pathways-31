@@ -218,7 +218,7 @@ const Header = () => {
                         {profile?.nome || user.user_metadata?.nome || user.email}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {profile?.congregacao_id || user.user_metadata?.congregacao || t('terms.congregation')}
+                        {profile?.congregacao || user.user_metadata?.congregacao || t('terms.congregation')}
                       </p>
                     </div>
                   </DropdownMenuLabel>
