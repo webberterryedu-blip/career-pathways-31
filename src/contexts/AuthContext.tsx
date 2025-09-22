@@ -777,3 +777,5 @@ Solução recomendada:
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;
