@@ -778,4 +778,5 @@ Solução recomendada:
   );
 };
 
+// Also export as default for compatibility
 export default AuthProvider;
