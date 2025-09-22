@@ -29,8 +29,7 @@ export default defineConfig(({ mode }) => ({
           'utils-vendor': ['date-fns', 'clsx', 'class-variance-authority'],
           
           // App chunks
-          'auth': ['src/contexts/AuthContext.tsx', 'src/utils/auth-recovery.ts'],
-          'dashboard': ['src/pages/InstrutorDashboard.tsx', 'src/pages/Dashboard.tsx'],
+                    'dashboard': ['src/pages/InstrutorDashboard.tsx', 'src/pages/Dashboard.tsx'],
           'estudantes': ['src/pages/EstudantesPage.tsx', 'src/hooks/useSpreadsheetImport.ts'],
           'programas': ['src/pages/ProgramasPage.tsx', 'src/pages/Programas.tsx'],
           'designacoes': ['src/pages/DesignacoesPage.tsx', 'src/pages/Designacoes.tsx']
