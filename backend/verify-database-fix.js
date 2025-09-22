@@ -3,10 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 
 // Load environment variables
 import dotenv from 'dotenv';
-dotenv.config({ path: './backend/.env' });
+dotenv.config({ path: './.env' });
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
 console.log('🔍 Verifying database fixes...');
 console.log('Supabase URL:', supabaseUrl);
@@ -61,7 +61,7 @@ async function verifyDatabase() {
       .from('estudantes')
       .select(`
         *,
-        profiles!left (id, nome, email, telefone, cargo, role)
+        profiles!left (id, nome, email, cargo, role, data_nascimento)
       `)
       .limit(3);
 
