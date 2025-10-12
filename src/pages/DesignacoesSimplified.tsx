@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Home, ArrowLeft, Users, Clock, BookOpen } from 'lucide-react';
+import { Calendar, Home, ChevronLeft, Users, Clock, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Designacao {
@@ -62,7 +62,7 @@ export default function DesignacoesSimplified() {
                 onClick={() => navigate('/dashboard')}
                 className="flex items-center gap-2"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" />
                 Dashboard
               </Button>
               <div className="h-6 w-px bg-gray-300" />

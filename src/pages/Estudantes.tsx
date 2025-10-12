@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Plus, Search, Users, ArrowLeft, Upload, BarChart3, Filter, FileSpreadsheet, Table } from "lucide-react";
+import { Plus, Search, Users, ChevronLeft, Upload, BarChart3, Filter, FileSpreadsheet, Table } from "lucide-react";
 import StudentsSpreadsheet from "@/components/StudentsSpreadsheet";
 import { useEstudantes } from "@/hooks/useEstudantes";
 import { useAuth } from "@/contexts/AuthContext";
@@ -278,7 +278,7 @@ const Estudantes = () => {
           actions={
             <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4">
               <Button variant="ghost" size="sm" className="text-white hover:text-jw-gold -ml-0 md:-ml-4" onClick={() => navigate('/dashboard')}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ChevronLeft className="w-4 h-4 mr-2" />
                 {t('common.backToDashboard')}
               </Button>
               <TutorialButton page="estudantes" variant="secondary" />

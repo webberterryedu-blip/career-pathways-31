@@ -8,7 +8,7 @@ import {
   SkipForward, 
   CheckCircle, 
   ArrowRight, 
-  ArrowLeft,
+  ChevronLeft,
   X,
   BookOpen,
   Lightbulb,
@@ -191,7 +191,7 @@ export const TutorialManager: React.FC<TutorialManagerProps> = ({
               disabled={state.currentStep === 0}
               className="flex items-center gap-1"
             >
-              <ArrowLeft className="w-3 h-3" />
+              <ChevronLeft className="w-3 h-3" />
               Anterior
             </Button>
             

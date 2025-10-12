@@ -11,8 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslation } from "@/hooks/useTranslation";
 import { 
   ArrowRight, 
-  ArrowLeft, 
-  CheckCircle, 
+  ChevronLeft, 
+  CheckCircle,
   User, 
   Building, 
   Settings,
@@ -338,7 +338,7 @@ const ConfiguracaoInicial = () => {
               onClick={handlePrevious}
               disabled={currentStep === 1}
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ChevronLeft className="w-4 h-4 mr-2" />
               {t('initialSetup.navigation.previous')}
             </Button>
 

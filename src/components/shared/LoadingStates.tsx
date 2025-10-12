@@ -8,7 +8,7 @@ import {
   CheckCircle, 
   Info,
   RefreshCw,
-  ArrowLeft
+  ChevronLeft
 } from 'lucide-react';
 
 // Loading Spinner Component
@@ -138,7 +138,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               onClick={onGoBack}
               className="text-red-600 hover:bg-red-100"
             >
-              <ArrowLeft className="w-4 h-4 mr-1" />
+              <ChevronLeft className="w-4 h-4 mr-1" />
               Voltar
             </Button>
           )}

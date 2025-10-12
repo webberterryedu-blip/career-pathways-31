@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CalendarDays, RefreshCw, CloudDownload, FileSpreadsheet, BarChart } from "lucide-react";
+import { ChevronLeft, CalendarDays, RefreshCw, CloudDownload, FileSpreadsheet, BarChart } from "lucide-react";
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef } from "ag-grid-community";
 import { toast } from "@/components/ui/use-toast";
@@ -281,7 +281,7 @@ export default function ProgramasPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ChevronLeft className="h-4 w-4 mr-2" />
             Voltar ao Dashboard
           </Button>
           

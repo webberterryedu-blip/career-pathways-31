@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, BookOpen, User, Home, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, BookOpen, User, Home, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Designacao {
@@ -139,7 +139,7 @@ export function StudentPortalSimplified() {
                 size="sm"
                 onClick={() => navigate('/dashboard')}
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ChevronLeft className="h-4 w-4 mr-2" />
                 Dashboard
               </Button>
             </div>

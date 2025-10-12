@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Clock, User, Users, Save, ArrowLeft, Home, BookOpen } from 'lucide-react';
+import { Calendar, Clock, User, Users, Save, ChevronLeft, Home, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import programacoesData from '@/data/programacoes-completas-2025.json';
