@@ -7,7 +7,7 @@ import { useDebugLogger } from '@/utils/debugLogger';
 import { forceLogout } from '@/utils/forceLogout';
 import { performHealthCheck } from '@/utils/supabaseHealthCheck';
 import { runLogoutDiagnostics } from '@/utils/logoutDiagnostics';
-import { Download, Trash2, Bug, Eye, EyeOff, AlertTriangle, Activity, Search } from 'lucide-react';
+import { Download, Trash2, Bug, Eye, EyeOff, AlertTriangle, TrendingUp, Search } from 'lucide-react';
 
 interface DebugPanelProps {
   position?: 'fixed' | 'relative';
@@ -344,7 +344,7 @@ const DebugPanelContent: React.FC<DebugPanelContentProps> = ({
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs"
           size="sm"
         >
-          <Activity className="w-3 h-3 mr-1" />
+          <TrendingUp className="w-3 h-3 mr-1" />
           🏥 Health Check
         </Button>
 

@@ -9,7 +9,7 @@ import {
   DownloadCloud, 
   FileText, 
   Users, 
-  Activity, 
+  TrendingUp, 
   Settings, 
   RefreshCw,
   CheckCircle,
@@ -55,7 +55,7 @@ const AdminDashboard = () => {
     {
       title: "Sistema Status",
       value: "Online",
-      icon: Activity,
+      icon: TrendingUp,
       change: "99.9% uptime",
       color: "text-success"
     }
@@ -167,7 +167,7 @@ const AdminDashboard = () => {
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-5 bg-muted/50">
             <TabsTrigger value="overview" className="gap-2">
-              <Activity className="h-4 w-4" />
+              <TrendingUp className="h-4 w-4" />
               Visão Geral
             </TabsTrigger>
             <TabsTrigger value="downloads" className="gap-2">
@@ -194,7 +194,7 @@ const AdminDashboard = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-success" />
+                    <TrendingUp className="h-5 w-5 text-success" />
                     Status do Sistema
                   </CardTitle>
                   <CardDescription>

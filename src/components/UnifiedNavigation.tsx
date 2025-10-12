@@ -12,7 +12,7 @@ import {
   UserCheck,
   Globe,
   FileText,
-  Activity,
+  TrendingUp,
   Cog
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -73,7 +73,7 @@ export default function UnifiedNavigation() {
       { href: '/designacoes', label: 'Designações', icon: Calendar },
       { href: '/relatorios', label: 'Relatórios', icon: BarChart3 },
       { href: '/reunioes', label: 'Reuniões', icon: Calendar },
-      { href: '/equidade', label: 'Equidade', icon: Activity }
+      { href: '/equidade', label: 'Equidade', icon: TrendingUp }
     ];
 
     return (
