@@ -169,6 +169,7 @@
     "rollup": "^4.0.0"
   },
   "devDependencies": {
+    "@axe-core/react": "^4.10.2",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.9.1",
@@ -190,6 +191,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "fast-glob": "^3.3.3",
     "globals": "^15.15.0",
+    "jest-axe": "^10.0.0",
     "jsdom": "^27.0.0",
     "lovable-tagger": "^1.1.9",
     "postcss": "^8.5.6",

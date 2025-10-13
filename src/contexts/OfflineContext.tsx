@@ -58,8 +58,20 @@ export const OfflineProvider: React.FC<OfflineProviderProps> = ({ children }) =>
   // Setup sync status listener
   useEffect(() => {
     const updateStatus = async () => {
-      const status = await offlineSyncManager.getSyncStatus();
-      setSyncStatus(status);
+      try {
+        const status = await offlineSyncManager.getSyncStatus();
+        setSyncStatus(status);
+      } catch (error) {
+        console.warn('Failed to get sync status:', error);
+        // Set a default status on error
+        setSyncStatus({
+          isOnline: navigator.onLine,
+          pendingOperations: 0,
+          lastSync: null,
+          isSyncing: false,
+          hasConflicts: false,
+        });
+      }
     };
 
     updateStatus();

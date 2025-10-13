@@ -16,6 +16,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { QuickAuthFix } from "@/components/auth/QuickAuthFix";
+import { AuthErrorHandler } from "@/components/auth/AuthErrorHandler";
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
@@ -340,16 +342,17 @@ const AuthPage: React.FC = () => {
               </Alert>
             )}
 
-            {/* Error message */}
-            {authError && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Erro de Autenticação</AlertTitle>
-                <AlertDescription className="whitespace-pre-wrap">
-                  {authError}
-                </AlertDescription>
-              </Alert>
-            )}
+            {/* Enhanced Error Handler */}
+            <AuthErrorHandler 
+              error={authError}
+              onClear={clearAuthError}
+              onRetry={() => {
+                clearAuthError();
+                // Focus back to email input
+                const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
+                emailInput?.focus();
+              }}
+            />
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
               <TabsList className="grid w-full grid-cols-2">
@@ -651,6 +654,9 @@ const AuthPage: React.FC = () => {
           </div>
         </div>
       </footer>
+      
+      {/* Quick Auth Fix for Development */}
+      {import.meta.env.DEV && <QuickAuthFix />}
     </div>
   );
 };

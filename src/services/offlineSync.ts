@@ -99,17 +99,30 @@ export class OfflineSyncManager {
   // Cache data for offline access
   async cacheTableData(table: string): Promise<void> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from(table)
         .select('*');
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific error cases
+        if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+          console.warn(`Table ${table} does not exist, skipping cache`);
+          return;
+        }
+        throw error;
+      }
 
       if (data) {
         await offlineStorage.cacheData(table, data);
       }
     } catch (error) {
-      console.error(`Failed to cache ${table} data:`, error);
+      console.warn(`Failed to cache ${table} data:`, error);
+      // Don't throw error for missing tables, just log warning
+      if (error instanceof Error && error.message?.includes('404')) {
+        console.warn(`Table ${table} not found (404), skipping cache`);
+        return;
+      }
+      // Only throw for unexpected errors
       throw error;
     }
   }
@@ -118,7 +131,7 @@ export class OfflineSyncManager {
   async getData(table: string, forceOnline = false): Promise<any[]> {
     if (this.isOnline && !forceOnline) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from(table)
           .select('*');
 
@@ -142,7 +155,7 @@ export class OfflineSyncManager {
   async insertData(table: string, data: any): Promise<{ data?: any; error?: any }> {
     if (this.isOnline) {
       try {
-        const { data: insertedData, error } = await supabase
+        const { data: insertedData, error } = await (supabase as any)
           .from(table)
           .insert(data)
           .select()
@@ -181,7 +194,7 @@ export class OfflineSyncManager {
   async updateData(table: string, id: string, data: any): Promise<{ data?: any; error?: any }> {
     if (this.isOnline) {
       try {
-        const { data: updatedData, error } = await supabase
+        const { data: updatedData, error } = await (supabase as any)
           .from(table)
           .update(data)
           .eq('id', id)
@@ -224,7 +237,7 @@ export class OfflineSyncManager {
   async deleteData(table: string, id: string): Promise<{ error?: any }> {
     if (this.isOnline) {
       try {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from(table)
           .delete()
           .eq('id', id);
@@ -324,7 +337,7 @@ export class OfflineSyncManager {
 
     switch (op) {
       case 'insert':
-        const { error: insertError } = await supabase
+        const { error: insertError } = await (supabase as any)
           .from(table)
           .insert(data);
         if (insertError) throw insertError;
@@ -332,7 +345,7 @@ export class OfflineSyncManager {
 
       case 'update':
         const { id, ...updateData } = data;
-        const { error: updateError } = await supabase
+        const { error: updateError } = await (supabase as any)
           .from(table)
           .update(updateData)
           .eq('id', id);
@@ -340,7 +353,7 @@ export class OfflineSyncManager {
         break;
 
       case 'delete':
-        const { error: deleteError } = await supabase
+        const { error: deleteError } = await (supabase as any)
           .from(table)
           .delete()
           .eq('id', data.id);
@@ -361,9 +374,9 @@ export class OfflineSyncManager {
   async preloadOfflineData(): Promise<void> {
     const essentialTables = [
       'estudantes',
-      'congregacoes',
       'programas',
       'designacoes'
+      // Note: 'congregacoes' table doesn't exist in current schema
     ];
 
     for (const table of essentialTables) {
@@ -371,6 +384,7 @@ export class OfflineSyncManager {
         await this.cacheTableData(table);
       } catch (error) {
         console.warn(`Failed to preload ${table}:`, error);
+        // Continue with other tables even if one fails
       }
     }
   }

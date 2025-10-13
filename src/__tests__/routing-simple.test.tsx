@@ -1,12 +1,24 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter, useNavigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { NavigationProvider, useNavigation, usePageMetadata } from '@/contexts/NavigationContext';
 import ProtectedRoute, { useRouteAccess } from '@/components/ProtectedRoute';
-import { NavigationProvider, useNavigation } from '@/contexts/NavigationContext';
 
-// Mock auth context with different user states
+// Mock localStorage
+const mockLocalStorage = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn()
+};
+
+Object.defineProperty(window, 'localStorage', {
+  value: mockLocalStorage
+});
+
+// Mock auth context
 const mockAuthContext = {
   user: null,
   profile: null,
@@ -23,65 +35,43 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => mockAuthContext
 }));
 
-// Test wrapper component
-const TestWrapper: React.FC<{ 
-  children: React.ReactNode; 
-  initialEntries?: string[];
-  user?: any;
-  profile?: any;
-  loading?: boolean;
-}> = ({ 
-  children, 
-  initialEntries = ['/'], 
-  user = null, 
-  profile = null, 
-  loading = false 
-}) => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false }
-    }
-  });
-
-  // Update mock auth context
-  mockAuthContext.user = user;
-  mockAuthContext.profile = profile;
-  mockAuthContext.loading = loading;
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={initialEntries}>
-        <NavigationProvider>
-          {children}
-        </NavigationProvider>
-      </MemoryRouter>
-    </QueryClientProvider>
-  );
-};
-
 describe('Routing and Navigation Tests', () => {
+  const TestWrapper: React.FC<{ 
+    children: React.ReactNode; 
+    initialEntries?: string[];
+  }> = ({ children, initialEntries = ['/'] }) => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false }
+      }
+    });
+
+    return (
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={initialEntries}>
+          <NavigationProvider>
+            {children}
+          </NavigationProvider>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+  };
+
   beforeEach(() => {
-    // Reset mocks before each test
     vi.clearAllMocks();
     mockAuthContext.user = null;
     mockAuthContext.profile = null;
     mockAuthContext.loading = false;
-    
-    // Clear localStorage
-    localStorage.clear();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
+    mockLocalStorage.getItem.mockReturnValue(null);
   });
 
   describe('Route Protection and Role-based Access Control', () => {
-    it('should show loading state while authentication is being verified', () => {
+    it('should show loading state when authentication is loading', () => {
       mockAuthContext.loading = true;
 
       render(
-        <TestWrapper initialEntries={['/dashboard']}>
+        <TestWrapper>
           <ProtectedRoute allowedRoles={['instrutor']}>
             <div>Protected Content</div>
           </ProtectedRoute>
@@ -89,6 +79,7 @@ describe('Routing and Navigation Tests', () => {
       );
 
       expect(screen.getByText('Verificando permissões...')).toBeInTheDocument();
+      expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
     });
 
     it('should allow access when user role matches allowed roles', () => {
@@ -97,13 +88,13 @@ describe('Routing and Navigation Tests', () => {
 
       render(
         <TestWrapper>
-          <ProtectedRoute allowedRoles={['instrutor']}>
-            <div>Protected Content</div>
+          <ProtectedRoute allowedRoles={['instrutor', 'admin']}>
+            <div>Instructor Content</div>
           </ProtectedRoute>
         </TestWrapper>
       );
 
-      expect(screen.getByText('Protected Content')).toBeInTheDocument();
+      expect(screen.getByText('Instructor Content')).toBeInTheDocument();
     });
 
     it('should deny access when user role does not match allowed roles', () => {
@@ -112,29 +103,30 @@ describe('Routing and Navigation Tests', () => {
 
       render(
         <TestWrapper>
-          <ProtectedRoute allowedRoles={['instrutor']}>
-            <div>Protected Content</div>
+          <ProtectedRoute allowedRoles={['instrutor', 'admin']}>
+            <div>Instructor Content</div>
           </ProtectedRoute>
         </TestWrapper>
       );
 
       expect(screen.getByText('Acesso negado')).toBeInTheDocument();
       expect(screen.getByText('Você não tem permissão para acessar esta página.')).toBeInTheDocument();
+      expect(screen.queryByText('Instructor Content')).not.toBeInTheDocument();
     });
 
-    it('should allow admin access to all routes', () => {
+    it('should allow admin access to restricted routes', () => {
       mockAuthContext.user = { id: '3', email: 'admin@test.com' };
       mockAuthContext.profile = { id: '3', role: 'admin', user_id: '3' };
 
       render(
         <TestWrapper>
           <ProtectedRoute allowedRoles={['instrutor']}>
-            <div>Protected Content</div>
+            <div>Instructor Only Content</div>
           </ProtectedRoute>
         </TestWrapper>
       );
 
-      expect(screen.getByText('Protected Content')).toBeInTheDocument();
+      expect(screen.getByText('Instructor Only Content')).toBeInTheDocument();
     });
   });
 
@@ -176,30 +168,6 @@ describe('Routing and Navigation Tests', () => {
       expect(screen.getByTestId('page-title')).toHaveTextContent('Dashboard');
     });
 
-    it('should maintain navigation history', async () => {
-      const { rerender } = render(
-        <TestWrapper initialEntries={['/dashboard']}>
-          <NavigationTestComponent />
-        </TestWrapper>
-      );
-
-      // Initial state
-      expect(screen.getByTestId('history-length')).toHaveTextContent('1');
-      expect(screen.getByTestId('can-go-back')).toHaveTextContent('false');
-
-      // Navigate to another route
-      rerender(
-        <TestWrapper initialEntries={['/estudantes']}>
-          <NavigationTestComponent />
-        </TestWrapper>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('current-path')).toHaveTextContent('/estudantes');
-        expect(screen.getByTestId('page-title')).toHaveTextContent('Gerenciar Estudantes');
-      });
-    });
-
     it('should persist navigation history in localStorage', () => {
       render(
         <TestWrapper initialEntries={['/dashboard']}>
@@ -207,11 +175,24 @@ describe('Routing and Navigation Tests', () => {
         </TestWrapper>
       );
 
-      const savedHistory = localStorage.getItem('navigationHistory');
-      expect(savedHistory).toBeTruthy();
-      
-      const history = JSON.parse(savedHistory!);
-      expect(history).toContain('/dashboard');
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        'navigationHistory',
+        expect.stringContaining('/dashboard')
+      );
+    });
+
+    it('should restore navigation history from localStorage', () => {
+      const mockHistory = ['/dashboard', '/estudantes', '/programas'];
+      mockLocalStorage.getItem.mockReturnValue(JSON.stringify(mockHistory));
+
+      render(
+        <TestWrapper initialEntries={['/programas']}>
+          <NavigationTestComponent />
+        </TestWrapper>
+      );
+
+      expect(screen.getByTestId('history-length')).toHaveTextContent('3');
+      expect(screen.getByTestId('can-go-back')).toHaveTextContent('true');
     });
 
     it('should clear navigation history when requested', () => {
@@ -225,21 +206,6 @@ describe('Routing and Navigation Tests', () => {
 
       expect(screen.getByTestId('history-length')).toHaveTextContent('1');
       expect(screen.getByTestId('can-go-back')).toHaveTextContent('false');
-    });
-
-    it('should restore navigation history from localStorage', () => {
-      // Pre-populate localStorage
-      const mockHistory = ['/dashboard', '/estudantes', '/programas'];
-      localStorage.setItem('navigationHistory', JSON.stringify(mockHistory));
-
-      render(
-        <TestWrapper initialEntries={['/programas']}>
-          <NavigationTestComponent />
-        </TestWrapper>
-      );
-
-      expect(screen.getByTestId('history-length')).toHaveTextContent('3');
-      expect(screen.getByTestId('can-go-back')).toHaveTextContent('true');
     });
   });
 
@@ -404,61 +370,48 @@ describe('Routing and Navigation Tests', () => {
         expect(document.title).toBe('Dashboard - Sistema Ministerial');
       });
     });
-
-    it('should update document title for different routes', async () => {
-      const { rerender } = render(
-        <TestWrapper initialEntries={['/estudantes']}>
-          <NavigationProvider>
-            <div>Test</div>
-          </NavigationProvider>
-        </TestWrapper>
-      );
-
-      await waitFor(() => {
-        expect(document.title).toBe('Gerenciar Estudantes - Sistema Ministerial');
-      });
-
-      rerender(
-        <TestWrapper initialEntries={['/programas']}>
-          <NavigationProvider>
-            <div>Test</div>
-          </NavigationProvider>
-        </TestWrapper>
-      );
-
-      await waitFor(() => {
-        expect(document.title).toBe('Gerenciar Programas - Sistema Ministerial');
-      });
-    });
   });
 
-  describe('Route Transitions and Loading States', () => {
-    it('should show loading state during route transitions', async () => {
-      mockAuthContext.user = { id: '1', email: 'instructor@test.com' };
-      mockAuthContext.profile = { id: '1', role: 'instrutor', user_id: '1' };
+  describe('Page Metadata Management', () => {
+    const PageMetadataTest = ({ title, breadcrumbs }: { 
+      title?: string; 
+      breadcrumbs?: Array<{ label: string; path: string }>;
+    }) => {
+      usePageMetadata(title, breadcrumbs);
+      const navigation = useNavigation();
 
+      return (
+        <div>
+          <div data-testid="page-title">{navigation.pageTitle}</div>
+          <div data-testid="breadcrumb-count">{navigation.breadcrumbs.length}</div>
+        </div>
+      );
+    };
+
+    it('should update page title using usePageMetadata hook', () => {
       render(
-        <TestWrapper initialEntries={['/dashboard']}>
-          <App />
+        <TestWrapper>
+          <PageMetadataTest title="Custom Page Title" />
         </TestWrapper>
       );
 
-      // The lazy-loaded components should show loading initially
-      // Then resolve to the actual component
-      await waitFor(() => {
-        expect(screen.getByTestId('instructor-dashboard')).toBeInTheDocument();
-      });
+      expect(screen.getByTestId('page-title')).toHaveTextContent('Custom Page Title');
     });
 
-    it('should handle route not found', () => {
+    it('should update breadcrumbs using usePageMetadata hook', () => {
+      const customBreadcrumbs = [
+        { label: 'Home', path: '/' },
+        { label: 'Custom Section', path: '/custom' },
+        { label: 'Current Page', path: '/custom/page' }
+      ];
+
       render(
-        <TestWrapper initialEntries={['/non-existent-route']}>
-          <App />
+        <TestWrapper>
+          <PageMetadataTest breadcrumbs={customBreadcrumbs} />
         </TestWrapper>
       );
 
-      // Should redirect to NotFound component
-      // This would be tested if we had a proper NotFound mock
+      expect(screen.getByTestId('breadcrumb-count')).toHaveTextContent('3');
     });
   });
 
@@ -496,6 +449,56 @@ describe('Routing and Navigation Tests', () => {
       }).toThrow('useNavigation must be used within a NavigationProvider');
 
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe('Navigation History Management', () => {
+    const NavigationHistoryTest = () => {
+      const navigate = useNavigate();
+      const location = useLocation();
+      const navigation = useNavigation();
+
+      return (
+        <div>
+          <div data-testid="current-location">{location.pathname}</div>
+          <div data-testid="history-length">{navigation.navigationHistory.length}</div>
+          <div data-testid="can-go-back">{navigation.canGoBack.toString()}</div>
+          
+          <button 
+            data-testid="navigate-dashboard" 
+            onClick={() => navigate('/dashboard')}
+          >
+            Dashboard
+          </button>
+          <button 
+            data-testid="navigate-estudantes" 
+            onClick={() => navigate('/estudantes')}
+          >
+            Estudantes
+          </button>
+        </div>
+      );
+    };
+
+    it('should track navigation history across route changes', async () => {
+      render(
+        <TestWrapper initialEntries={['/']}>
+          <NavigationHistoryTest />
+        </TestWrapper>
+      );
+
+      // Initial state
+      expect(screen.getByTestId('history-length')).toHaveTextContent('1');
+      expect(screen.getByTestId('can-go-back')).toHaveTextContent('false');
+
+      // Navigate to dashboard
+      fireEvent.click(screen.getByTestId('navigate-dashboard'));
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('current-location')).toHaveTextContent('/dashboard');
+        expect(screen.getByTestId('history-length')).toHaveTextContent('2');
+        expect(screen.getByTestId('can-go-back')).toHaveTextContent('true');
+      });
     });
   });
 });

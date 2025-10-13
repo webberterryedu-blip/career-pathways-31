@@ -31,11 +31,21 @@ export class OfflineStorage {
 
   async initialize(): Promise<void> {
     return new Promise((resolve, reject) => {
+      if (!('indexedDB' in window)) {
+        reject(new Error('IndexedDB not supported'));
+        return;
+      }
+
       const request = indexedDB.open(this.dbName, this.version);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        console.error('Failed to open IndexedDB:', request.error);
+        reject(request.error);
+      };
+      
       request.onsuccess = () => {
         this.db = request.result;
+        console.log('IndexedDB initialized successfully');
         resolve();
       };
 
@@ -61,6 +71,65 @@ export class OfflineStorage {
         }
       };
     });
+  }
+
+  // Clear all data (useful for debugging)
+  async clearAllData(): Promise<void> {
+    if (!this.db) await this.initialize();
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.db!.transaction(['cached_data', 'pending_operations', 'sync_metadata'], 'readwrite');
+        
+        transaction.objectStore('cached_data').clear();
+        transaction.objectStore('pending_operations').clear();
+        transaction.objectStore('sync_metadata').clear();
+        
+        transaction.oncomplete = () => {
+          console.log('All offline data cleared');
+          resolve();
+        };
+        
+        transaction.onerror = () => reject(transaction.error);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  // Check database health
+  async checkDatabaseHealth(): Promise<{ healthy: boolean; issues: string[] }> {
+    const issues: string[] = [];
+    
+    try {
+      if (!this.db) await this.initialize();
+      
+      // Check if all required object stores exist
+      const requiredStores = ['cached_data', 'pending_operations', 'sync_metadata'];
+      for (const store of requiredStores) {
+        if (!this.db!.objectStoreNames.contains(store)) {
+          issues.push(`Missing object store: ${store}`);
+        }
+      }
+      
+      // Check if indexes exist
+      const transaction = this.db!.transaction(['pending_operations'], 'readonly');
+      const store = transaction.objectStore('pending_operations');
+      
+      const requiredIndexes = ['table', 'timestamp', 'synced'];
+      for (const index of requiredIndexes) {
+        try {
+          store.index(index);
+        } catch (error) {
+          issues.push(`Missing index: ${index}`);
+        }
+      }
+      
+      return { healthy: issues.length === 0, issues };
+    } catch (error) {
+      issues.push(`Database initialization error: ${error}`);
+      return { healthy: false, issues };
+    }
   }
 
   // Cache data for offline access
@@ -156,13 +225,35 @@ export class OfflineStorage {
     if (!this.db) await this.initialize();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['pending_operations'], 'readonly');
-      const store = transaction.objectStore('pending_operations');
-      const index = store.index('synced');
-      const request = index.getAll(false);
+      try {
+        const transaction = this.db!.transaction(['pending_operations'], 'readonly');
+        const store = transaction.objectStore('pending_operations');
+        
+        // Check if the index exists before using it
+        let request;
+        try {
+          const index = store.index('synced');
+          // Use IDBKeyRange for proper key handling
+          const keyRange = IDBKeyRange.only(false);
+          request = index.getAll(keyRange);
+        } catch (indexError) {
+          // Fallback to getting all records and filtering
+          request = store.getAll();
+        }
 
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const results = request.result;
+          // Filter for unsynced operations if we got all records
+          const pendingOps = results.filter((op: OfflineData) => !op.synced);
+          resolve(pendingOps);
+        };
+        
+        request.onerror = () => reject(request.error);
+        
+        transaction.onerror = () => reject(transaction.error);
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
@@ -199,7 +290,7 @@ export class OfflineStorage {
       const transaction = this.db!.transaction(['pending_operations'], 'readwrite');
       const store = transaction.objectStore('pending_operations');
       const index = store.index('synced');
-      const request = index.openCursor(true);
+      const request = index.openCursor(IDBKeyRange.only(true));
 
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;

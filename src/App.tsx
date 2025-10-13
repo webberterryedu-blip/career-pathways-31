@@ -1,7 +1,9 @@
 import React, { Suspense, lazy } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createQueryClient } from "@/lib/queryClient";
+import { usePerformanceMonitoring } from "@/hooks/usePerformanceMonitoring";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext"; // Using named import to match export
 import { OnboardingProvider } from "@/contexts/OnboardingContext"; 
@@ -16,6 +18,9 @@ import { NavigationProvider } from "@/contexts/NavigationContext";
 import { TutorialOverlay } from "@/components/tutorial";
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineErrorBoundary } from "@/components/OfflineErrorBoundary";
+import { initializeDebugUtils } from "@/utils/debugOffline";
+import { initializeAuthDebugUtils } from "@/utils/debugAuth";
 
 // Eager load critical components
 // import Index from "./pages/Index";
@@ -53,7 +58,8 @@ const ProgramasTest = lazy(() => import("./pages/ProgramasTest"));
 const DensityToggleTestPage = lazy(() => import("./pages/DensityToggleTest"));
 const ZoomResponsivenessTestPage = lazy(() => import("./pages/ZoomResponsivenessTest"));
 
-const queryClient = new QueryClient();
+// Create optimized query client with enhanced caching
+const queryClient = createQueryClient();
 
 // Loading component with better UX
 const PageLoader = () => (
@@ -113,13 +119,40 @@ const FlowNav: React.FC = () => {
   );
 };
 
-const App = () => (
+const App = () => {
+  // Performance monitoring for the main app
+  usePerformanceMonitoring('App');
+  
+  // Initialize debug utilities in development
+  React.useEffect(() => {
+    if (import.meta.env.DEV) {
+      initializeDebugUtils();
+      initializeAuthDebugUtils();
+      
+      // Show helpful message about errors
+      setTimeout(() => {
+        console.log('%c🔧 Debug Tools Loaded', 'color: #2196F3; font-weight: bold; font-size: 16px;');
+        console.log('%c📱 Offline Storage:', 'color: #4CAF50; font-weight: bold;');
+        console.log('  debugOffline.checkHealth() - Check database health');
+        console.log('  debugOffline.resetDatabase() - Reset if corrupted');
+        console.log('%c🔐 Authentication:', 'color: #FF9800; font-weight: bold;');
+        console.log('  debugAuth.checkConnection() - Test Supabase connection');
+        console.log('  debugAuth.createTestUser("test@example.com", "123456") - Create test user');
+        console.log('  debugAuth.resetPassword("email") - Reset password');
+        console.log('%c💡 Quick Fix for Login Issues:', 'color: #E91E63; font-weight: bold;');
+        console.log('  debugAuth.createTestUser("admin@test.com", "123456")');
+      }, 2000);
+    }
+  }, []);
+  
+  return (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <AuthProvider>
           <NotificationProvider>
-            <OfflineProvider>
+            <OfflineErrorBoundary>
+              <OfflineProvider>
               <OnboardingProvider>
                 <ProgramProvider>
                   <AssignmentProvider>
@@ -316,11 +349,13 @@ const App = () => (
                 </ProgramProvider>
               </OnboardingProvider>
             </OfflineProvider>
+            </OfflineErrorBoundary>
           </NotificationProvider>
         </AuthProvider>
       </LanguageProvider>
     </QueryClientProvider>
   </ErrorBoundary>
-);
+  );
+};
 
 export default App;

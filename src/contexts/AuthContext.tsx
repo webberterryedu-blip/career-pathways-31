@@ -102,20 +102,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               profileError = null;
             } else {
               console.error('Failed to fix profile user_id:', updateError);
-              setAuthError(`Erro de permissão (406). O perfil existe mas o user_id não corresponde ao seu ID de autenticação. Tente:\n1. Criar um novo usuário\n2. Ou contate um administrador para corrigir o perfil existente.`);
+              setAuthError(`Erro de permissï¿½o (406). O perfil existe mas o user_id nï¿½o corresponde ao seu ID de autenticaï¿½ï¿½o. Tente:\n1. Criar um novo usuï¿½rio\n2. Ou contate um administrador para corrigir o perfil existente.`);
               return null;
             }
           } else {
             // No profile found by email either
             console.log('No profile found by email either. Creating new profile...');
-            setAuthError(`Erro de permissão (406). Nenhum perfil encontrado para seu usuário. Criando um novo perfil...`);
+            setAuthError(`Erro de permissï¿½o (406). Nenhum perfil encontrado para seu usuï¿½rio. Criando um novo perfil...`);
             
             // Create profile from user data
             const { data: userData } = await supabase.auth.getUser();
             if (userData.user) {
               const newProfile: any = {
                 user_id: userId,
-                nome: userData.user.user_metadata?.nome || userData.user.email?.split('@')[0] || 'Usuário',
+                nome: userData.user.user_metadata?.nome || userData.user.email?.split('@')[0] || 'Usuï¿½rio',
                 email: userData.user.email || '',
                 role: userData.user.user_metadata?.role || 'instrutor',
                 created_at: new Date().toISOString(),
@@ -160,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const updatedProfile: Profile = { 
             id: profileData.id,
             user_id: profileData.user_id || profileData.id,
-            nome: (profileData.nome as string) || (profileData.email as string)?.split('@')[0] || 'Usuário',
+            nome: (profileData.nome as string) || (profileData.email as string)?.split('@')[0] || 'Usuï¿½rio',
             email: (profileData.email as string) || '',
             role: ((profileData.role === 'admin' || profileData.role === 'instrutor' || profileData.role === 'estudante') 
               ? profileData.role 
@@ -204,7 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const updatedProfile: Profile = { 
             id: profileData.id,
             user_id: profileData.user_id || profileData.id,
-            nome: (profileData.nome as string) || (profileData.email as string)?.split('@')[0] || 'Usuário',
+            nome: (profileData.nome as string) || (profileData.email as string)?.split('@')[0] || 'Usuï¿½rio',
             email: (profileData.email as string) || '',
             role: ((profileData.role === 'admin' || profileData.role === 'instrutor' || profileData.role === 'estudante') 
               ? profileData.role 
@@ -269,7 +269,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error handling auth state change:', error);
-      setAuthError('Erro ao processar mudança de autenticação');
+      setAuthError('Erro ao processar mudanï¿½a de autenticaï¿½ï¿½o');
     } finally {
       setLoading(false);
     }
@@ -285,7 +285,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (sessionError) {
         console.error('Session error:', sessionError);
-        setAuthError(`Erro de sessão: ${sessionError.message}`);
+        setAuthError(`Erro de sessï¿½o: ${sessionError.message}`);
         return;
       }
 
@@ -311,7 +311,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error refreshing auth:', error);
-      setAuthError('Erro ao verificar sessão');
+      setAuthError('Erro ao verificar sessï¿½o');
       setUser(null);
       setProfile(null);
     } finally {
@@ -333,38 +333,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (signInError) {
-        console.error('Sign in error:', signInError);
+        // Enhanced error logging for development
+        if (import.meta.env.DEV) {
+          console.group('ðŸ” Authentication Error');
+          console.error('Error Details:', signInError);
+          console.log('Email:', email);
+          console.log('Error Code:', signInError.status);
+          console.log('Error Message:', signInError.message);
+          console.log('ðŸ’¡ Quick Fix: debugAuth.createTestUser("admin@test.com", "123456")');
+          console.groupEnd();
+        } else {
+          console.error('Sign in error:', signInError);
+        }
         
         // Handle specific error cases with detailed user-friendly messages
         let errorMessage = signInError.message;
         
         if (signInError.message.includes('Invalid login credentials')) {
           // Since we know the user exists and is confirmed, this might be a profile issue
-          errorMessage = `CREDENCIAIS INVÁLIDAS
+          errorMessage = `CREDENCIAIS INVï¿½LIDAS
 
-Possíveis causas:
+Possï¿½veis causas:
 1. Senha incorreta para frankwebber33@hotmail.com
-2. Problemas com o perfil do usuário
+2. Problemas com o perfil do usuï¿½rio
 
-Soluções imediatas:
+Soluï¿½ï¿½es imediatas:
 1. Redefina sua senha no painel do Supabase
-2. Crie um novo usuário de teste
+2. Crie um novo usuï¿½rio de teste
 3. Verifique se o perfil foi criado corretamente
 
 Para redefinir sua senha:
 1. Acesse https://app.supabase.com/project/jbapewpuvfijrkhlbsid
-2. Vá em Authentication > Users
+2. Vï¿½ em Authentication > Users
 3. Encontre frankwebber33@hotmail.com
-4. Clique nos três pontos > "Reset Password"
+4. Clique nos trï¿½s pontos > "Reset Password"
 5. Defina uma nova senha
 6. Use essa senha para fazer login`;
         } else if (signInError.message.includes('Email not confirmed')) {
-          errorMessage = 'Seu email ainda não foi confirmado.\n\nSoluções:\n• Verifique sua caixa de entrada e spam pelo email de confirmação\n• Clique no link de confirmação no email\n• Se não recebeu o email, peça reenvio através do formulário de login';
+          errorMessage = 'Seu email ainda nï¿½o foi confirmado.\n\nSoluï¿½ï¿½es:\nï¿½ Verifique sua caixa de entrada e spam pelo email de confirmaï¿½ï¿½o\nï¿½ Clique no link de confirmaï¿½ï¿½o no email\nï¿½ Se nï¿½o recebeu o email, peï¿½a reenvio atravï¿½s do formulï¿½rio de login';
         }
         
         // Add development-specific guidance
         if (import.meta.env.DEV) {
-          errorMessage += '\n\nDICA PARA DESENVOLVEDORES:\n• Verifique se o perfil tem o user_id correto\n• Confira as políticas RLS\n• Tente criar um novo usuário';
+          errorMessage += '\n\nDICA PARA DESENVOLVEDORES:\nï¿½ Verifique se o perfil tem o user_id correto\nï¿½ Confira as polï¿½ticas RLS\nï¿½ Tente criar um novo usuï¿½rio';
         }
         
         setAuthError(errorMessage);
@@ -418,9 +429,9 @@ Para redefinir sua senha:
         
         // Handle specific error cases
         if (error.message.includes('email_address_invalid')) {
-          errorMessage = 'Formato de email inválido. Por favor, verifique o endereço de email.';
+          errorMessage = 'Formato de email invï¿½lido. Por favor, verifique o endereï¿½o de email.';
         } else if (error.message.includes('User already registered')) {
-          errorMessage = 'Este email já está registrado. Por favor, faça login ou use um email diferente.';
+          errorMessage = 'Este email jï¿½ estï¿½ registrado. Por favor, faï¿½a login ou use um email diferente.';
         }
         
         setAuthError(errorMessage);
@@ -430,9 +441,9 @@ Para redefinir sua senha:
       console.log('Sign up successful');
       // In development, inform user that they can login directly without email confirmation
       if (import.meta.env.DEV) {
-        setAuthError('Registro realizado com sucesso! Em modo de desenvolvimento, você pode fazer login diretamente. Em produção, será necessário confirmar o email.');
+        setAuthError('Registro realizado com sucesso! Em modo de desenvolvimento, vocï¿½ pode fazer login diretamente. Em produï¿½ï¿½o, serï¿½ necessï¿½rio confirmar o email.');
       } else {
-        setAuthError('Registro realizado com sucesso! Por favor, verifique seu email para o link de confirmação antes de fazer login.');
+        setAuthError('Registro realizado com sucesso! Por favor, verifique seu email para o link de confirmaï¿½ï¿½o antes de fazer login.');
       }
       return { error: null };
     } catch (error: any) {
@@ -463,7 +474,7 @@ Para redefinir sua senha:
       return { error: null };
     } catch (error: any) {
       console.error('Unexpected error during sign out:', error);
-      setAuthError('Erro durante o logout. Por favor, atualize a página.');
+      setAuthError('Erro durante o logout. Por favor, atualize a pï¿½gina.');
       return { error: error };
     }
   }, []);
@@ -496,7 +507,7 @@ Para redefinir sua senha:
         const updatedProfile: Profile = {
           id: data.id,
           user_id: data.user_id || data.id,
-          nome: (data.nome as string) || (data.email as string)?.split('@')[0] || 'Usuário',
+          nome: (data.nome as string) || (data.email as string)?.split('@')[0] || 'Usuï¿½rio',
           email: (data.email as string) || '',
           role: ((data.role === 'admin' || data.role === 'instrutor' || data.role === 'estudante') 
             ? data.role 
@@ -548,14 +559,14 @@ Para redefinir sua senha:
     console.log('Attempting to confirm user in development:', email);
     // This is a placeholder - actual implementation would require service role key
     // For now, just provide guidance to the user
-    setAuthError(`Para confirmar o usuário ${email}:
-1. Vá para o painel do Supabase
+    setAuthError(`Para confirmar o usuï¿½rio ${email}:
+1. Vï¿½ para o painel do Supabase
 2. Authentication > Users
-3. Encontre o usuário e clique "Confirm user"
+3. Encontre o usuï¿½rio e clique "Confirm user"
 
 OU
 
-Desative a confirmação de email nas configurações do Supabase.`);
+Desative a confirmaï¿½ï¿½o de email nas configuraï¿½ï¿½es do Supabase.`);
   } : undefined;
 
   // Development function to diagnose authentication issues
@@ -568,15 +579,15 @@ Desative a confirmação de email nas configurações do Supabase.`);
       console.log('Current session:', session);
       console.log('Session error:', sessionError);
       
-      let diagnosticMessage = 'Diagnóstico completo:\n';
+      let diagnosticMessage = 'Diagnï¿½stico completo:\n';
       
       if (session) {
-        diagnosticMessage += '• Sessão ativa encontrada\n';
-        diagnosticMessage += `• User ID: ${session.user.id}\n`;
-        diagnosticMessage += `• Email: ${session.user.email}\n`;
-        diagnosticMessage += `• Confirmado: ${session.user.email_confirmed_at ? 'Sim' : 'Não'}\n`;
+        diagnosticMessage += 'ï¿½ Sessï¿½o ativa encontrada\n';
+        diagnosticMessage += `ï¿½ User ID: ${session.user.id}\n`;
+        diagnosticMessage += `ï¿½ Email: ${session.user.email}\n`;
+        diagnosticMessage += `ï¿½ Confirmado: ${session.user.email_confirmed_at ? 'Sim' : 'Nï¿½o'}\n`;
       } else {
-        diagnosticMessage += '• Nenhuma sessão ativa\n';
+        diagnosticMessage += 'ï¿½ Nenhuma sessï¿½o ativa\n';
       }
       
       // Check if we can access profiles table at all
@@ -590,7 +601,7 @@ Desative a confirmação de email nas configurações do Supabase.`);
       
       if (profilesError) {
         if (profilesError.message.includes('406')) {
-          diagnosticMessage += '• Erro de permissão RLS ao acessar perfis\n';
+          diagnosticMessage += 'ï¿½ Erro de permissï¿½o RLS ao acessar perfis\n';
           
           // Try to find the user's profile specifically
           if (session) {
@@ -602,9 +613,9 @@ Desative a confirmação de email nas configurações do Supabase.`);
               .maybeSingle();
             
             if (userByIdProfile) {
-              diagnosticMessage += '• Perfil encontrado com user_id correto\n';
+              diagnosticMessage += 'ï¿½ Perfil encontrado com user_id correto\n';
             } else if (userByIdError && userByIdError.message.includes('406')) {
-              diagnosticMessage += '• Perfil existe mas user_id não corresponde (problema de dados)\n';
+              diagnosticMessage += 'ï¿½ Perfil existe mas user_id nï¿½o corresponde (problema de dados)\n';
             } else {
               // Try by email
               const { data: userByEmailProfile, error: userByEmailError } = await supabase
@@ -614,33 +625,33 @@ Desative a confirmação de email nas configurações do Supabase.`);
                 .maybeSingle();
               
               if (userByEmailProfile) {
-                diagnosticMessage += '• Perfil encontrado por email, mas user_id incorreto\n';
+                diagnosticMessage += 'ï¿½ Perfil encontrado por email, mas user_id incorreto\n';
                 if (userByEmailProfile.user_id !== session.user.id) {
                   diagnosticMessage += `  user_id no perfil: ${userByEmailProfile.user_id}\n`;
                   diagnosticMessage += `  user_id de auth: ${session.user.id}\n`;
                 }
               } else {
-                diagnosticMessage += '• Nenhum perfil encontrado para este usuário\n';
+                diagnosticMessage += 'ï¿½ Nenhum perfil encontrado para este usuï¿½rio\n';
               }
             }
           }
           
-          diagnosticMessage += '  Solução: Corrigir o user_id no perfil ou criar novo perfil\n';
+          diagnosticMessage += '  Soluï¿½ï¿½o: Corrigir o user_id no perfil ou criar novo perfil\n';
         } else {
-          diagnosticMessage += `• Erro ao acessar perfis: ${profilesError.message}\n`;
+          diagnosticMessage += `ï¿½ Erro ao acessar perfis: ${profilesError.message}\n`;
         }
       } else {
-        diagnosticMessage += '• Acesso a perfis funcionando\n';
+        diagnosticMessage += 'ï¿½ Acesso a perfis funcionando\n';
       }
       
-      diagnosticMessage += '\nSolução recomendada:\n';
-      diagnosticMessage += '1. Tente criar um novo usuário\n';
+      diagnosticMessage += '\nSoluï¿½ï¿½o recomendada:\n';
+      diagnosticMessage += '1. Tente criar um novo usuï¿½rio\n';
       diagnosticMessage += '2. Ou verifique se o perfil tem o user_id correto\n';
       
       setAuthError(diagnosticMessage);
     } catch (error) {
       console.error('Diagnosis error:', error);
-      setAuthError('Erro durante o diagnóstico: ' + (error as Error).message);
+      setAuthError('Erro durante o diagnï¿½stico: ' + (error as Error).message);
     }
   } : undefined;
 
@@ -654,7 +665,7 @@ Desative a confirmação de email nas configurações do Supabase.`);
       
       if (userError) {
         console.error('Failed to get current user:', userError);
-        setAuthError('Falha ao obter usuário atual: ' + userError.message);
+        setAuthError('Falha ao obter usuï¿½rio atual: ' + userError.message);
         return false;
       }
       
@@ -673,7 +684,7 @@ Desative a confirmação de email nas configurações do Supabase.`);
         // Check if user_id matches
         if (profileByEmail.user_id === userId) {
           console.log('Profile user_id is correct');
-          setAuthError('Perfil encontrado e user_id está correto. O problema pode ser outro.');
+          setAuthError('Perfil encontrado e user_id estï¿½ correto. O problema pode ser outro.');
           return true;
         } else {
           console.log('Profile user_id mismatch. Attempting to fix...');
@@ -694,14 +705,14 @@ Desative a confirmação de email nas configurações do Supabase.`);
             console.error('Failed to update profile:', updateError);
             
             // If we can't update due to RLS, suggest manual fix
-            setAuthError(`Falha ao corrigir perfil devido a políticas de segurança (RLS).
+            setAuthError(`Falha ao corrigir perfil devido a polï¿½ticas de seguranï¿½a (RLS).
 
-Solução recomendada:
-1. Vá para o painel do Supabase
+Soluï¿½ï¿½o recomendada:
+1. Vï¿½ para o painel do Supabase
 2. Table Editor > profiles
 3. Encontre o perfil com email: ${email}
 4. Edite o campo user_id para: ${userId}
-5. Salve as alterações`);
+5. Salve as alteraï¿½ï¿½es`);
             return false;
           }
         }
@@ -730,10 +741,10 @@ Solução recomendada:
           console.error('Failed to create profile:', createError);
           
           // If we can't create due to RLS, suggest manual fix
-          setAuthError(`Falha ao criar perfil devido a políticas de segurança (RLS).
+          setAuthError(`Falha ao criar perfil devido a polï¿½ticas de seguranï¿½a (RLS).
 
-Solução recomendada:
-1. Vá para o painel do Supabase
+Soluï¿½ï¿½o recomendada:
+1. Vï¿½ para o painel do Supabase
 2. Table Editor > profiles
 3. Clique em "Insert" para adicionar um novo perfil
 4. Preencha os campos:
@@ -741,7 +752,7 @@ Solução recomendada:
    - email: ${email}
    - nome: ${email.split('@')[0]}
    - role: instrutor
-5. Salve as alterações`);
+5. Salve as alteraï¿½ï¿½es`);
           return false;
         }
       }
