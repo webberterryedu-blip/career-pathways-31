@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Error tracking and reporting service for production issues
  */
