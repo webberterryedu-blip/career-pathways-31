@@ -12,8 +12,7 @@ import {
   Clock,
   AlertCircle,
   TrendingUp,
-  Plus,
-  ArrowRight
+  Plus
 } from "lucide-react";
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import { useNavigate } from "react-router-dom";

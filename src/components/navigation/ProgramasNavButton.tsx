@@ -7,7 +7,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, ArrowRight } from 'lucide-react';
+import { CalendarDays, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ProgramasNavButtonProps {
@@ -51,7 +51,7 @@ export function ProgramasNavButton({
                 </p>
               )}
             </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
         </CardContent>
       </Card>

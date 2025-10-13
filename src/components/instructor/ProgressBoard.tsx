@@ -13,7 +13,7 @@ import {
   Users, 
   Award, 
   Target,
-  ArrowRight,
+  ChevronRight,
   CheckCircle
 } from 'lucide-react';
 import { 
@@ -122,7 +122,7 @@ export const ProgressBoard: React.FC<ProgressBoardProps> = ({
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-500">
-          <ArrowRight className="w-4 h-4" />
+          <ChevronRight className="w-4 h-4" />
           <span>Arraste para mover</span>
         </div>
       </div>

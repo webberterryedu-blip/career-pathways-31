@@ -22,7 +22,7 @@ import {
   UserCheck,
   UserX,
   Lightbulb,
-  ArrowRight,
+  ChevronRight,
   Info
 } from 'lucide-react';
 
@@ -451,7 +451,7 @@ export function ConflictResolutionPanel({
                                 ) : (
                                   <>
                                     Apply
-                                    <ArrowRight className="h-4 w-4 ml-1" />
+                                    <ChevronRight className="h-4 w-4 ml-1" />
                                   </>
                                 )}
                               </Button>

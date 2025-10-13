@@ -14,7 +14,7 @@ import {
   Users, 
   Calendar, 
   FileText,
-  ArrowRight,
+  ChevronRight,
   AlertCircle,
   Info
 } from 'lucide-react';
@@ -220,7 +220,7 @@ export const UserFlowGuide: React.FC<UserFlowGuideProps> = ({ onNavigate }) => {
         <Card className="border-jw-blue bg-blue-50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-jw-blue">
-              <ArrowRight className="w-5 h-5" />
+              <ChevronRight className="w-5 h-5" />
               Próximo Passo
             </CardTitle>
           </CardHeader>

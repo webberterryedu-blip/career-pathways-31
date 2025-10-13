@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/hooks/useTranslation";
 import { 
   CheckCircle, 
-  ArrowRight, 
+  ChevronRight, 
   Users, 
   Calendar, 
   FileText, 
@@ -254,7 +254,7 @@ const BemVindo = () => {
                       {/* Arrow connector */}
                       {index < workflowSteps.length - 1 && (
                         <div className="hidden md:block absolute top-8 -right-3 text-gray-300">
-                          <ArrowRight className="w-6 h-6" />
+                          <ChevronRight className="w-6 h-6" />
                         </div>
                       )}
                     </div>
@@ -339,7 +339,7 @@ const BemVindo = () => {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 ) : (
-                  <ArrowRight className="w-5 h-5 mr-2" />
+                  <ChevronRight className="w-5 h-5 mr-2" />
                 )}
                 {isLoading ? t('welcome.configuring') : t('welcome.startSetup')}
               </Button>

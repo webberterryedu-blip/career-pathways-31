@@ -7,7 +7,7 @@ import {
   PlayCircle, 
   SkipForward, 
   CheckCircle, 
-  ArrowRight, 
+  ChevronRight, 
   ChevronLeft,
   X,
   BookOpen,
@@ -212,7 +212,7 @@ export const TutorialManager: React.FC<TutorialManagerProps> = ({
               ) : (
                 <>
                   Próximo
-                  <ArrowRight className="w-3 h-3" />
+                  <ChevronRight className="w-3 h-3" />
                 </>
               )}
             </Button>

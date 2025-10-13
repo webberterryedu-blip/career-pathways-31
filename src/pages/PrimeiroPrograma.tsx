@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslation } from "@/hooks/useTranslation";
 import { 
-  ArrowRight, 
+  ChevronRight, 
   CheckCircle, 
   Users, 
   Calendar, 
@@ -220,7 +220,7 @@ const PrimeiroPrograma = () => {
                 onClick={handleFinishOnboarding}
               >
                 {t('firstProgram.goToDashboard')}
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
             

@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   BookOpen, 
   CheckCircle, 
-  ArrowRight, 
+  ChevronRight, 
   Play,
   Lightbulb,
   Target,
@@ -251,7 +251,7 @@ export const TutorialIntegration: React.FC<TutorialIntegrationProps> = ({
               disabled={recommendedTutorials.length === 0}
             >
               Começar Primeiro Tutorial
-              <ArrowRight className="w-3 h-3 ml-1" />
+              <ChevronRight className="w-3 h-3 ml-1" />
             </Button>
           </div>
         </CardContent>

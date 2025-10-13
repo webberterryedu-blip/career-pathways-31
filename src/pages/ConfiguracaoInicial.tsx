@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslation } from "@/hooks/useTranslation";
 import { 
-  ArrowRight, 
+  ChevronRight, 
   ChevronLeft, 
   CheckCircle,
   User, 
@@ -348,7 +348,7 @@ const ConfiguracaoInicial = () => {
                 disabled={!isStepValid()}
               >
                 {t('initialSetup.navigation.next')}
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
               <Button
