@@ -1,14 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Plus, Search, Filter, Users, FileSpreadsheet, BarChart3, Upload, Table, Info } from "lucide-react";
-import SidebarLayout from "@/components/layout/SidebarLayout";
+import { Plus, Search, Filter, Users, FileSpreadsheet, BarChart3, Upload, Table, Info, History, Award } from "lucide-react";
+import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import { useEstudantes } from "@/hooks/useEstudantes";
+import { useStudentContext } from "@/contexts/StudentContext";
+import { useAssignmentContext } from "@/contexts/AssignmentContext";
 import EstudanteForm from "@/components/EstudanteForm";
 import EstudanteCard from "@/components/EstudanteCard";
 import SpreadsheetUpload from "@/components/SpreadsheetUpload";
@@ -26,6 +28,7 @@ const EstudantesPage = () => {
   const [activeTab, setActiveTab] = useState('list');
   const [editingEstudante, setEditingEstudante] = useState<EstudanteWithParent | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   const {
     estudantes,
@@ -38,6 +41,19 @@ const EstudantesPage = () => {
     filterEstudantes,
     getStatistics,
   } = useEstudantes();
+
+  // Enhanced functionality with contexts
+  const { 
+    getFamilyMembers, 
+    getStudentStats,
+    updateStudentQualifications,
+    validateStudentQualifications
+  } = useStudentContext();
+  
+  const { 
+    getAssignmentsByStudent,
+    getStudentHistory 
+  } = useAssignmentContext();
 
   const [filters, setFilters] = useState<EstudanteFilters>({
     searchTerm: "",
@@ -102,7 +118,7 @@ const EstudantesPage = () => {
 
   if (isLoading) {
     return (
-      <SidebarLayout title="Estudantes">
+      <UnifiedLayout>
         <div className="space-y-4">
           <Skeleton className="h-12 w-full" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -111,26 +127,25 @@ const EstudantesPage = () => {
             <Skeleton className="h-32 w-full" />
           </div>
         </div>
-      </SidebarLayout>
+      </UnifiedLayout>
     );
   }
 
   if (error) {
     return (
-      <SidebarLayout title="Estudantes">
+      <UnifiedLayout>
         <EmptyState
           title="Erro ao carregar estudantes"
           description={String(error)}
           action={<Button onClick={() => refetch()}>Tentar novamente</Button>}
         />
-      </SidebarLayout>
+      </UnifiedLayout>
     );
   }
 
   return (
-    <SidebarLayout 
-      title="Gestão de Estudantes"
-      actions={
+    <UnifiedLayout>
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             🔄 Atualizar
@@ -144,10 +159,10 @@ const EstudantesPage = () => {
             Novo Estudante
           </Button>
         </div>
-      }
-    >
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="list" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
             Lista
@@ -156,13 +171,17 @@ const EstudantesPage = () => {
             <Plus className="w-4 h-4" />
             {editingEstudante ? 'Editar' : 'Novo'}
           </TabsTrigger>
+          <TabsTrigger value="qualifications" className="flex items-center gap-2">
+            <Award className="w-4 h-4" />
+            Qualificações
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="w-4 h-4" />
+            Histórico
+          </TabsTrigger>
           <TabsTrigger value="import" className="flex items-center gap-2">
             <FileSpreadsheet className="w-4 h-4" />
             Importar
-          </TabsTrigger>
-          <TabsTrigger value="spreadsheet" className="flex items-center gap-2">
-            <Table className="w-4 h-4" />
-            Planilha
           </TabsTrigger>
           <TabsTrigger value="stats" className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4" />
@@ -238,6 +257,128 @@ const EstudantesPage = () => {
           />
         </TabsContent>
 
+        <TabsContent value="qualifications" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                Qualificações dos Estudantes
+              </CardTitle>
+              <CardDescription>
+                Gerencie qualificações e privilégios dos estudantes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {filteredEstudantes.map((estudante) => {
+                  const familyMembers = getFamilyMembers(estudante.id);
+                  return (
+                    <div key={estudante.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h4 className="font-medium">{estudante.nome}</h4>
+                          <p className="text-sm text-gray-600">
+                            {CARGO_LABELS[(estudante as any).cargo as keyof typeof CARGO_LABELS]} • {(estudante as any).genero}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={estudante.ativo ? "default" : "secondary"}>
+                            {estudante.ativo ? "Ativo" : "Inativo"}
+                          </Badge>
+                          {familyMembers.length > 0 && (
+                            <Badge variant="outline">
+                              {familyMembers.length} familiares
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <Badge variant="outline" className="justify-center">
+                          📖 Leitura Bíblica
+                        </Badge>
+                        <Badge variant="outline" className="justify-center">
+                          🎭 Demonstrações
+                        </Badge>
+                        {(estudante as any).genero === 'masculino' && (
+                          <>
+                            <Badge variant="outline" className="justify-center">
+                              🎤 Discursos
+                            </Badge>
+                            <Badge variant="outline" className="justify-center">
+                              📚 Estudos Bíblicos
+                            </Badge>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="w-5 h-5" />
+                Histórico de Designações
+              </CardTitle>
+              <CardDescription>
+                Visualize o histórico de designações dos estudantes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Select value={selectedStudentId || ""} onValueChange={setSelectedStudentId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um estudante" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredEstudantes.map((estudante) => (
+                      <SelectItem key={estudante.id} value={estudante.id}>
+                        {estudante.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {selectedStudentId && (
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Designações Recentes</h4>
+                    {/* Mock assignment history - in real implementation, this would come from context */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">Leitura da Bíblia</p>
+                          <p className="text-sm text-gray-600">05/12/2024 - Gênesis 1:1-15</p>
+                        </div>
+                        <Badge variant="default">Concluída</Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">Iniciando Conversas</p>
+                          <p className="text-sm text-gray-600">28/11/2024 - Com assistente</p>
+                        </div>
+                        <Badge variant="default">Concluída</Badge>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">Cultivando o Interesse</p>
+                          <p className="text-sm text-gray-600">12/12/2024 - Próxima designação</p>
+                        </div>
+                        <Badge variant="secondary">Programada</Badge>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="stats" className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
@@ -294,11 +435,9 @@ const EstudantesPage = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="spreadsheet" className="w-full overflow-x-auto">
-          <StudentsSpreadsheet estudantes={estudantes || []} onRefresh={() => refetch()} />
-        </TabsContent>
+
       </Tabs>
-    </SidebarLayout>
+    </UnifiedLayout>
   );
 };
 

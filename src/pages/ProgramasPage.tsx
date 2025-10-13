@@ -15,9 +15,12 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
-  Download
+  Download,
+  Link,
+  Settings,
+  Play
 } from "lucide-react";
-import SidebarLayout from "@/components/layout/SidebarLayout";
+import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import { useNavigate } from "react-router-dom";
 import { useProgramContext } from "@/contexts/ProgramContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -254,6 +257,7 @@ const ProgramasPage = () => {
   const [programas, setProgramas] = useState<ProgramaSemanal[]>([]);
   const [programaSelecionado, setProgramaSelecionado] = useState<ProgramaSemanal | null>(null);
   const [pdfsDisponiveis, setPdfsDisponiveis] = useState<any>(null);
+  const [isActivating, setIsActivating] = useState(false);
 
   // Carregar PDFs disponíveis ao montar o componente
   useEffect(() => {
@@ -409,24 +413,48 @@ const ProgramasPage = () => {
     });
   };
 
+  // Enhanced program activation workflow
+  const activateProgram = async (programa: ProgramaSemanal) => {
+    setIsActivating(true);
+    try {
+      // Set as selected program in context
+      setSelectedProgramId(programa.id);
+      
+      // Store program data for immediate access
+      localStorage.setItem('selectedProgram', JSON.stringify(programa));
+      
+      toast({
+        title: "Programa ativado!",
+        description: `Programa "${programa.semana}" está agora ativo para geração de designações.`
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao ativar programa",
+        description: "Não foi possível ativar o programa selecionado.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsActivating(false);
+    }
+  };
+
   return (
-    <SidebarLayout 
-      title="Programas Ministeriais"
-      actions={
+    <UnifiedLayout>
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={carregarProgramasReais}>
             <Download className="w-4 h-4 mr-2" />
             Carregar Programas
           </Button>
-          <Button size="sm" onClick={() => setActiveTab("import")}>
+          <Button variant="outline" size="sm" onClick={() => setActiveTab("import")}>
             <Upload className="w-4 h-4 mr-2" />
             Importar PDF
           </Button>
         </div>
-      }
-    >
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="list" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Lista de Semanas
@@ -434,6 +462,10 @@ const ProgramasPage = () => {
           <TabsTrigger value="import" className="flex items-center gap-2">
             <Upload className="w-4 h-4" />
             Importar
+          </TabsTrigger>
+          <TabsTrigger value="resources" className="flex items-center gap-2">
+            <Link className="w-4 h-4" />
+            Recursos
           </TabsTrigger>
           <TabsTrigger value="detail" className="flex items-center gap-2" disabled={!programaSelecionado}>
             <FileText className="w-4 h-4" />
@@ -495,24 +527,35 @@ const ProgramasPage = () => {
                       >
                         Ver Detalhes
                       </Button>
-                      <Button 
-                        size="sm"
-                        onClick={() => {
-                          // Navigate to designacoes page with the selected program
-                          // Set the program in context
-                          setSelectedProgramId(programa.id);
-                          // For now, we'll use a default congregacao ID
-                          // In a real app, this would be selected by the user
-                          setSelectedCongregacaoId('congregacao-1');
-                          // Persist full program so DesignacoesPage can load it immediately
-                          try {
-                            localStorage.setItem('selectedProgram', JSON.stringify(programa));
-                          } catch (_) {}
-                          navigate('/designacoes');
-                        }}
-                      >
-                        Usar Programa
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          onClick={() => activateProgram(programa)}
+                          disabled={isActivating}
+                        >
+                          <Play className="w-4 h-4 mr-1" />
+                          Ativar
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={() => {
+                            // Navigate to designacoes page with the selected program
+                            // Set the program in context
+                            setSelectedProgramId(programa.id);
+                            // For now, we'll use a default congregacao ID
+                            // In a real app, this would be selected by the user
+                            setSelectedCongregacaoId('congregacao-1');
+                            // Persist full program so DesignacoesPage can load it immediately
+                            try {
+                              localStorage.setItem('selectedProgram', JSON.stringify(programa));
+                            } catch (_) {}
+                            navigate('/designacoes');
+                          }}
+                        >
+                          Usar Programa
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -523,6 +566,83 @@ const ProgramasPage = () => {
 
         <TabsContent value="import" className="space-y-6">
           <ImportacaoPDF onImportComplete={handleImportComplete} />
+        </TabsContent>
+
+        <TabsContent value="resources" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Link className="w-5 h-5" />
+                Recursos e Materiais
+              </CardTitle>
+              <CardDescription>
+                Links para materiais de referência e recursos de apoio
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Apostila MWB</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Apostila oficial "Vida e Ministério Cristão"
+                    </p>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Download className="w-4 h-4 mr-2" />
+                      Baixar PDF Atual
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Vídeos JW.org</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Vídeos e materiais audiovisuais
+                    </p>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Link className="w-4 h-4 mr-2" />
+                      Acessar JW.org
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Guia S-38</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Diretrizes para designações ministeriais
+                    </p>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Ver Diretrizes
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Templates</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Modelos para designações e relatórios
+                    </p>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Gerar Templates
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="detail" className="space-y-6">
@@ -569,7 +689,7 @@ const ProgramasPage = () => {
           )}
         </TabsContent>
       </Tabs>
-    </SidebarLayout>
+    </UnifiedLayout>
   );
 };
 

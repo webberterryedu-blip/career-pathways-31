@@ -8,7 +8,14 @@ import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { TutorialProvider } from "@/contexts/TutorialContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProgramProvider } from "@/contexts/ProgramContext";
+import { AssignmentProvider } from "@/contexts/AssignmentContext";
+import { StudentProvider } from "@/contexts/StudentContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { OfflineProvider } from "@/contexts/OfflineContext";
+import { NavigationProvider } from "@/contexts/NavigationContext";
 import { TutorialOverlay } from "@/components/tutorial";
+import UnifiedLayout from "@/components/layout/UnifiedLayout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Eager load critical components
 // import Index from "./pages/Index";
@@ -48,9 +55,17 @@ const ZoomResponsivenessTestPage = lazy(() => import("./pages/ZoomResponsiveness
 
 const queryClient = new QueryClient();
 
-// Loading component
+// Loading component with better UX
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
+  <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+    <p className="text-sm text-muted-foreground">Carregando...</p>
+  </div>
+);
+
+// Route-specific loading component
+const RouteLoader = () => (
+  <div className="flex items-center justify-center p-8">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
   </div>
 );
@@ -99,23 +114,30 @@ const FlowNav: React.FC = () => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <AuthProvider>
-        <OnboardingProvider>
-          <ProgramProvider>
-            <TutorialProvider>
-            <TooltipProvider>
-              <Sonner />
-              <TutorialOverlay />
-              <BrowserRouter
-                future={{
-                  v7_startTransition: true,
-                  v7_relativeSplatPath: true
-                }}
-              >
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <OfflineProvider>
+              <OnboardingProvider>
+                <ProgramProvider>
+                  <AssignmentProvider>
+                    <StudentProvider>
+                      <TutorialProvider>
+                        <TooltipProvider>
+                          <Sonner />
+                          <TutorialOverlay />
+                          <BrowserRouter
+                            future={{
+                              v7_startTransition: true,
+                              v7_relativeSplatPath: true
+                            }}
+                          >
+                            <NavigationProvider>
+                              <ErrorBoundary>
+                                <Suspense fallback={<PageLoader />}>
+                                <Routes>
                     {/* Public Routes */}
                     <Route path="/" element={<Navigate to="/auth" replace />} />
                     <Route path="/auth" element={<Auth />} />
@@ -169,112 +191,136 @@ const App = () => (
                       </>
                     )}
 
-                    {/* Dashboard Principal */}
-                    <Route 
-                      path="/dashboard" 
-                      element={
-                        <ProtectedRoute allowedRoles={['instrutor']}>
-                          <InstrutorDashboard />
-                        </ProtectedRoute>
-                      } 
-                    />
+                                  {/* Protected Routes with Unified Layout */}
+                                  <Route
+                                    path="/"
+                                    element={
+                                      <ProtectedRoute allowedRoles={['instrutor', 'estudante', 'admin']}>
+                                        <UnifiedLayout />
+                                      </ProtectedRoute>
+                                    }
+                                  >
+                                    {/* Dashboard Principal */}
+                                    <Route 
+                                      path="dashboard" 
+                                      element={
+                                        <Suspense fallback={<RouteLoader />}>
+                                          <InstrutorDashboard />
+                                        </Suspense>
+                                      } 
+                                    />
 
-                    {/* Instrutor Routes */}
-                    <Route
-                      path="/estudantes"
-                      element={
-                        <ProtectedRoute allowedRoles={['instrutor']}>
-                          <EstudantesPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/programas"
-                      element={
-                        <ProtectedRoute allowedRoles={['instrutor']}>
-                          <ProgramasPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/designacoes"
-                      element={
-                        <ProtectedRoute allowedRoles={['instrutor']}>
-                          <DesignacoesPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/treasures-designacoes"
-                      element={
-                        <ProtectedRoute allowedRoles={['instrutor']}>
-                          <TreasuresAssignmentsPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/assignments"
-                      element={
-                        <ProtectedRoute allowedRoles={['instrutor']}>
-                          <AssignmentsPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/relatorios"
-                      element={
-                        <ProtectedRoute allowedRoles={['instrutor']}>
-                          <RelatoriosPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/reunioes"
-                      element={
-                        <ProtectedRoute allowedRoles={['instrutor']}>
-                          <Reunioes />
-                        </ProtectedRoute>
-                      }
-                    />
+                                    {/* Instrutor Routes */}
+                                    <Route 
+                                      path="estudantes" 
+                                      element={
+                                        <Suspense fallback={<RouteLoader />}>
+                                          <EstudantesPage />
+                                        </Suspense>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="programas" 
+                                      element={
+                                        <Suspense fallback={<RouteLoader />}>
+                                          <ProgramasPage />
+                                        </Suspense>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="designacoes" 
+                                      element={
+                                        <Suspense fallback={<RouteLoader />}>
+                                          <DesignacoesPage />
+                                        </Suspense>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="treasures-designacoes" 
+                                      element={
+                                        <Suspense fallback={<RouteLoader />}>
+                                          <TreasuresAssignmentsPage />
+                                        </Suspense>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="assignments" 
+                                      element={
+                                        <Suspense fallback={<RouteLoader />}>
+                                          <AssignmentsPage />
+                                        </Suspense>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="relatorios" 
+                                      element={
+                                        <Suspense fallback={<RouteLoader />}>
+                                          <RelatoriosPage />
+                                        </Suspense>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="reunioes" 
+                                      element={
+                                        <Suspense fallback={<RouteLoader />}>
+                                          <Reunioes />
+                                        </Suspense>
+                                      } 
+                                    />
 
-                    {/* Estudante Routes */}
-                    <Route
-                      path="/estudante/:id"
-                      element={
-                        <ProtectedRoute allowedRoles={['estudante']}>
-                          <UnifiedDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/estudante/:id/familia"
-                      element={
-                        <ProtectedRoute allowedRoles={['estudante', 'instrutor']}>
-                          <div>Portal Familiar em construção</div>
-                        </ProtectedRoute>
-                      }
-                    />
+                                    {/* Estudante Routes */}
+                                    <Route 
+                                      path="estudante/:id" 
+                                      element={
+                                        <Suspense fallback={<RouteLoader />}>
+                                          <UnifiedDashboard />
+                                        </Suspense>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="estudante/:id/familia" 
+                                      element={<div className="p-8 text-center text-muted-foreground">Portal Familiar em construção</div>} 
+                                    />
+                                    <Route 
+                                      path="estudante/:id/designacoes" 
+                                      element={<div className="p-8 text-center text-muted-foreground">Minhas Designações em construção</div>} 
+                                    />
+                                    <Route 
+                                      path="estudante/:id/materiais" 
+                                      element={<div className="p-8 text-center text-muted-foreground">Materiais em construção</div>} 
+                                    />
+                                    <Route 
+                                      path="estudante/:id/historico" 
+                                      element={<div className="p-8 text-center text-muted-foreground">Histórico em construção</div>} 
+                                    />
+                                  </Route>
 
                     {/* Removed problematic routes */}
 
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-                <FlowNav />
-              </BrowserRouter>
-            </TooltipProvider>
+                                  <Route path="*" element={<NotFound />} />
+                                </Routes>
+                                </Suspense>
+                              </ErrorBoundary>
+                              <FlowNav />
+                            </NavigationProvider>
+                          </BrowserRouter>
 
-            {/* Auth Recovery Button */}
-            <div className="fixed top-4 right-4 z-50">
-              <AuthRecoveryButton />
-            </div>
-
-            </TutorialProvider>
-          </ProgramProvider>
-        </OnboardingProvider>
-      </AuthProvider>
-    </LanguageProvider>
-  </QueryClientProvider>
+                          {/* Auth Recovery Button */}
+                          <div className="fixed top-4 right-4 z-50">
+                            <AuthRecoveryButton />
+                          </div>
+                        </TooltipProvider>
+                      </TutorialProvider>
+                    </StudentProvider>
+                  </AssignmentProvider>
+                </ProgramProvider>
+              </OnboardingProvider>
+            </OfflineProvider>
+          </NotificationProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

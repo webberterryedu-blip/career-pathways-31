@@ -18,12 +18,17 @@ import {
   Download,
   Upload,
   RefreshCw,
-  Save
+  Save,
+  Edit,
+  Zap,
+  Target
 } from "lucide-react";
-import PageShell from "@/components/layout/PageShell";
+import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import { useEstudantes } from "@/hooks/useEstudantes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useAssignmentContext } from "@/contexts/AssignmentContext";
+import { useStudentContext } from "@/contexts/StudentContext";
 import { supabase } from "@/integrations/supabase/client";
 
 // Tipos para o sistema de designações
@@ -71,8 +76,25 @@ const DesignacoesPage = () => {
   const [designacoes, setDesignacoes] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState<string | null>(null);
   const { estudantes, isLoading: estudantesLoading } = useEstudantes();
   const { user } = useAuth();
+  
+  // Enhanced functionality with contexts
+  const { 
+    assignments,
+    createAssignment,
+    updateAssignment,
+    validateAssignments,
+    detectConflicts,
+    generateAssignments: contextGenerateAssignments
+  } = useAssignmentContext();
+  
+  const { 
+    getActiveStudents,
+    getQualifiedStudents,
+    validateStudentQualifications
+  } = useStudentContext();
 
   // Helper function to convert assignment type to number
   const assignmentTypeToNumber = (assignmentType: string): number => {
@@ -585,43 +607,89 @@ const DesignacoesPage = () => {
     return <Badge variant="secondary">Designada</Badge>;
   };
 
-  return (
-    <PageShell 
-      title={`Designações - ${programaAtual ? programaAtual.semana : '—'}`}
-      actions={
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={carregarSemanaAtual} disabled={isLoading}>
-            {isLoading ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-            Carregar Programa
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setDesignacoes([])}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Limpar
-          </Button>
-          <Button size="sm" onClick={gerarDesignacoes} disabled={isGenerating || !programaAtual || !congregacaoId}>
-            {isGenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Users className="w-4 h-4 mr-2" />}
-            Gerar Designações Automáticas
-          </Button>
-          {designacoes.length > 0 && (
-            <Button size="sm" variant="default" onClick={salvarDesignacoes}>
-              <Save className="w-4 h-4 mr-2" />
-              Salvar Designações
-            </Button>
-          )}
-        </div>
+  // Enhanced assignment validation with S-38 rules
+  const validateAssignmentWithS38 = (assignment: any) => {
+    const validation = validateAssignments([assignment]);
+    const conflicts = detectConflicts([assignment]);
+    
+    return {
+      ...validation,
+      conflicts: conflicts.length > 0,
+      conflictDetails: conflicts
+    };
+  };
+
+  // Real-time assignment editing
+  const handleAssignmentEdit = async (assignmentId: string, field: string, value: any) => {
+    try {
+      const assignment = designacoes.find(d => d.id === assignmentId);
+      if (!assignment) return;
+
+      const updatedAssignment = { ...assignment, [field]: value };
+      const validation = validateAssignmentWithS38(updatedAssignment);
+      
+      if (!validation.isValid) {
+        toast({
+          title: "Validação S-38 falhou",
+          description: validation.errors[0]?.message || "Designação não atende aos critérios S-38",
+          variant: "destructive"
+        });
+        return;
       }
-    >
+
+      // Update local state
+      setDesignacoes(prev => prev.map(d => d.id === assignmentId ? updatedAssignment : d));
+      
+      toast({
+        title: "Designação atualizada",
+        description: "Alteração salva com validação S-38"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao editar designação",
+        description: "Não foi possível salvar a alteração",
+        variant: "destructive"
+      });
+    }
+  };
+
+  return (
+    <UnifiedLayout>
       <div className="space-y-6">
-        {/* Configuração */}
+        {/* Enhanced configuration with quick actions */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={carregarSemanaAtual} disabled={isLoading}>
+              {isLoading ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+              Carregar Programa
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setDesignacoes([])}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Limpar
+            </Button>
+            <Button size="sm" onClick={gerarDesignacoes} disabled={isGenerating || !programaAtual || !congregacaoId}>
+              {isGenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
+              Gerar com S-38
+            </Button>
+            {designacoes.length > 0 && (
+              <Button size="sm" variant="default" onClick={salvarDesignacoes}>
+                <Save className="w-4 h-4 mr-2" />
+                Salvar Designações
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Configuration */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Configuração
+              Configuração e Status
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="text-sm font-medium">Programa:</label>
                 {programasDisponiveis.length > 1 ? (
@@ -644,7 +712,13 @@ const DesignacoesPage = () => {
               <div>
                 <label className="text-sm font-medium">Estudantes ativos:</label>
                 <p className="text-sm text-gray-600">
-                  {estudantesLoading ? 'Carregando...' : `${estudantes?.length || 0} estudantes`}
+                  {estudantesLoading ? 'Carregando...' : `${getActiveStudents().length} disponíveis`}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Qualificados para discursos:</label>
+                <p className="text-sm text-gray-600">
+                  {getQualifiedStudents('talk').length} estudantes
                 </p>
               </div>
               <div>
@@ -689,22 +763,22 @@ const DesignacoesPage = () => {
         {/* Tabela de designações */}
         {programaAtual && (
           <>
-            {/* S-38 Algorithm Summary */}
+            {/* Enhanced S-38 Algorithm Summary with conflict resolution */}
             {designacoes.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    Resumo do Algoritmo S-38
+                    <Target className="w-5 h-5 text-green-600" />
+                    Algoritmo S-38 - Status e Conflitos
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-600">
                         {designacoes.filter(d => d.status === 'OK').length}
                       </div>
-                      <div className="text-sm text-gray-500">Designações Confirmadas</div>
+                      <div className="text-sm text-gray-500">Confirmadas</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-yellow-600">
@@ -713,10 +787,16 @@ const DesignacoesPage = () => {
                       <div className="text-sm text-gray-500">Pendentes</div>
                     </div>
                     <div className="text-center">
+                      <div className="text-2xl font-bold text-red-600">
+                        {detectConflicts(designacoes).length}
+                      </div>
+                      <div className="text-sm text-gray-500">Conflitos</div>
+                    </div>
+                    <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
                         {designacoes.filter(d => d.observacoes && d.observacoes.includes('fallback')).length}
                       </div>
-                      <div className="text-sm text-gray-500">Fallbacks Aplicados</div>
+                      <div className="text-sm text-gray-500">Fallbacks</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
@@ -725,6 +805,16 @@ const DesignacoesPage = () => {
                       <div className="text-sm text-gray-500">Taxa de Sucesso</div>
                     </div>
                   </div>
+                  
+                  {detectConflicts(designacoes).length > 0 && (
+                    <Alert className="mt-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        <strong>Conflitos detectados:</strong> {detectConflicts(designacoes).length} problema(s) encontrado(s). 
+                        Clique em "Editar" nas designações para resolver.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -808,9 +898,22 @@ const DesignacoesPage = () => {
                               )}
                             </TableCell>
                             <TableCell>
-                              <Button variant="ghost" size="sm" disabled>
-                                Editar
-                              </Button>
+                              <div className="flex items-center gap-1">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => setEditingAssignment(
+                                    editingAssignment === designacao.id ? null : designacao.id
+                                  )}
+                                >
+                                  <Edit className="w-3 h-3" />
+                                </Button>
+                                {detectConflicts([designacao]).length > 0 && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    Conflito
+                                  </Badge>
+                                )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
@@ -823,7 +926,7 @@ const DesignacoesPage = () => {
           </>
         )}
       </div>
-    </PageShell>
+    </UnifiedLayout>
   );
 };
 

@@ -1,67 +1,50 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { errorHandler, AppError, ErrorType } from '../utils/errorHandler';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Button } from './ui/button';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onError?: (error: AppError) => void;
 }
 
 interface State {
   hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
+  error?: AppError;
 }
 
-/**
- * 🛡️ ERROR BOUNDARY - Captura erros React e mostra fallback amigável
- * 
- * ✅ Regra 6: Error Handling
- * - Captura erros em componentes filhos
- * - Mostra UI de fallback amigável
- * - Permite reset da aplicação
- * - Log detalhado para debugging
- */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null
-    };
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return {
-      hasError: true,
-      error,
-      errorInfo: null
-    };
+    return { hasError: true };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('🚨 ErrorBoundary caught an error:', error, errorInfo);
-    
-    this.setState({
-      error,
-      errorInfo
+    const appError = errorHandler.processError(error, {
+      page: window.location.pathname,
+      action: 'component_render',
+      data: { errorInfo }
     });
 
-    // 📊 Aqui você pode enviar o erro para um serviço de monitoramento
-    // como Sentry, LogRocket, etc.
+    this.setState({ error: appError });
+    
+    if (this.props.onError) {
+      this.props.onError(appError);
+    }
   }
 
-  handleReset = () => {
-    this.setState({
-      hasError: false,
-      error: null,
-      errorInfo: null
-    });
-    
-    // Recarregar a página como última opção
-    window.location.reload();
+  private handleRetry = () => {
+    this.setState({ hasError: false, error: undefined });
+  };
+
+  private handleGoHome = () => {
+    window.location.href = '/dashboard';
   };
 
   render() {
@@ -70,52 +53,41 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
+      const error = this.state.error;
+
       return (
         <div className="min-h-screen flex items-center justify-center p-4">
-          <Card className="max-w-lg w-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-600">
-                <AlertCircle className="h-5 w-5" />
-                Oops! Algo deu errado
-              </CardTitle>
-              <CardDescription>
-                Um erro inesperado ocorreu. Nossa equipe foi notificada.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-800 font-medium">
-                  {this.state.error?.message || 'Erro desconhecido'}
-                </p>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button onClick={this.handleReset} className="flex-1">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Tentar Novamente
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.href = '/'}
-                  className="flex-1"
-                >
-                  Ir para Início
-                </Button>
-              </div>
-              
-              {process.env.NODE_ENV === 'development' && (
-                <details className="mt-4">
-                  <summary className="text-sm font-medium cursor-pointer">
-                    Detalhes do Erro (Dev Mode)
-                  </summary>
-                  <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
-                    {this.state.error?.stack}
-                    {this.state.errorInfo?.componentStack}
-                  </pre>
-                </details>
-              )}
-            </CardContent>
-          </Card>
+          <div className="max-w-md w-full">
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Something went wrong</AlertTitle>
+              <AlertDescription className="mt-2">
+                {error?.userMessage || 'An unexpected error occurred. Please try again.'}
+              </AlertDescription>
+            </Alert>
+
+            <div className="mt-4 flex gap-2">
+              <Button onClick={this.handleRetry} className="flex-1">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+              <Button variant="outline" onClick={this.handleGoHome} className="flex-1">
+                <Home className="h-4 w-4 mr-2" />
+                Go Home
+              </Button>
+            </div>
+
+            {process.env.NODE_ENV === 'development' && error && (
+              <details className="mt-4 p-3 bg-gray-100 rounded text-sm">
+                <summary className="cursor-pointer font-medium">
+                  Error Details (Development)
+                </summary>
+                <pre className="mt-2 whitespace-pre-wrap text-xs">
+                  {JSON.stringify(error, null, 2)}
+                </pre>
+              </details>
+            )}
+          </div>
         </div>
       );
     }
@@ -124,19 +96,17 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-/**
- * 🎯 HOC para wrapping automático de componentes
- */
-export function withErrorBoundary<T extends object>(
-  Component: React.ComponentType<T>,
+// Higher-order component for wrapping components with error boundary
+export const withErrorBoundary = <P extends object>(
+  Component: React.ComponentType<P>,
   fallback?: ReactNode
-) {
-  return function WithErrorBoundaryComponent(props: T) {
-    return (
-      <ErrorBoundary fallback={fallback}>
-        <Component {...props} />
-      </ErrorBoundary>
-    );
-  };
-}
+) => {
+  const WrappedComponent = (props: P) => (
+    <ErrorBoundary fallback={fallback}>
+      <Component {...props} />
+    </ErrorBoundary>
+  );
 
+  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
+  return WrappedComponent;
+};
