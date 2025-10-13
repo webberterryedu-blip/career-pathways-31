@@ -188,7 +188,7 @@ describe('Navigation Integration Tests', () => {
           <div data-testid="breadcrumb-count">{breadcrumbs.length}</div>
           {breadcrumbs.map((crumb, index) => (
             <div key={index} data-testid={`breadcrumb-${index}`}>
-              {crumb.label} -> {crumb.path}
+              {crumb.label} {'->'} {crumb.path}
             </div>
           ))}
         </div>
