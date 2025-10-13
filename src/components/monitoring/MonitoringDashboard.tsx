@@ -18,10 +18,8 @@ import {
   Clock,
   Users,
   Zap,
-  TrendingDown,
   Eye,
   MousePointer,
-  Smartphone,
   Monitor
 } from 'lucide-react';
 
@@ -33,13 +31,13 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classN
   const { getMetrics } = usePerformanceMetrics();
   const { getSessionAnalytics } = useAnalytics();
   const { getErrorStats } = useErrorTracking();
-  const { getUserBehaviorInsights, getFeatureUsageStats } = useUsageAnalytics();
+  const { getUserBehaviorInsights } = useUsageAnalytics();
 
   const [performanceData, setPerformanceData] = useState<any>(null);
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [errorData, setErrorData] = useState<any>(null);
   const [usageData, setUsageData] = useState<any>(null);
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
+
 
   useEffect(() => {
     const fetchData = () => {
@@ -53,7 +51,7 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classN
 
     // Set up auto-refresh
     const interval = setInterval(fetchData, 5000); // Refresh every 5 seconds
-    setRefreshInterval(interval);
+
 
     return () => {
       if (interval) clearInterval(interval);
