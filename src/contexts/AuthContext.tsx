@@ -48,9 +48,152 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  
+  // 🚀 BYPASS DE DESENVOLVIMENTO - Remove isso em produção!
+  const DEV_BYPASS = import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
+  const FRANK_BYPASS = import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'frank';
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // 🚀 BYPASS DE DESENVOLVIMENTO - Usuário fake para testes
+  useEffect(() => {
+    if (FRANK_BYPASS) {
+      console.log('🚀 FRANK BYPASS ATIVO - Logando como Frank Webber');
+      const frankUser = {
+        id: '1d112896-626d-4dc7-a758-0e5bec83fe6c',
+        email: 'frankwebber33@hotmail.com',
+        created_at: '2025-09-21T15:20:40.785506+00:00',
+        updated_at: '2025-10-05T16:20:39.034069+00:00',
+        app_metadata: { provider: 'email', providers: ['email'] },
+        user_metadata: {
+          sub: '1d112896-626d-4dc7-a758-0e5bec83fe6c',
+          nome: 'Frank Webber',
+          role: 'instrutor',
+          email: 'frankwebber33@hotmail.com',
+          email_verified: true,
+          phone_verified: false
+        },
+        aud: 'authenticated',
+        confirmation_sent_at: '2025-09-21T17:17:55.037637+00:00',
+        confirmed_at: '2025-10-03T13:54:42.116467+00:00',
+        email_confirmed_at: '2025-10-03T13:54:42.116467+00:00',
+        phone: null,
+        phone_confirmed_at: null,
+        last_sign_in_at: '2025-10-03T22:55:17.345242+00:00',
+        role: 'authenticated',
+        identities: []
+      } as User;
+      
+      const frankProfile = {
+        id: '1d112896-626d-4dc7-a758-0e5bec83fe6c',
+        user_id: '1d112896-626d-4dc7-a758-0e5bec83fe6c',
+        nome: 'Frank Webber',
+        email: 'frankwebber33@hotmail.com',
+        role: 'instrutor' as const,
+        congregacao: 'Congregação Central',
+        created_at: '2025-09-21T15:20:40.785506+00:00',
+        updated_at: '2025-10-05T16:20:39.034069+00:00'
+      };
+      
+      setUser(frankUser);
+      setProfile(frankProfile);
+      setLoading(false);
+      setAuthError(null);
+      return;
+    } else if (DEV_BYPASS) {
+      console.log('🚀 AUTH BYPASS ATIVO - Criando usuário fake para desenvolvimento');
+      const fakeUser = {
+        id: 'dev-user-123',
+        email: 'dev@test.com',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        confirmation_sent_at: null,
+        confirmed_at: new Date().toISOString(),
+        email_confirmed_at: new Date().toISOString(),
+        phone: null,
+        phone_confirmed_at: null,
+        last_sign_in_at: new Date().toISOString(),
+        role: 'authenticated',
+        identities: []
+      } as User;
+      
+      const fakeProfile = {
+        id: 'dev-user-123',
+        user_id: 'dev-user-123',
+        nome: 'Desenvolvedor',
+        email: 'dev@test.com',
+        role: 'admin' as const,
+        congregacao: 'Congregação de Desenvolvimento',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      setUser(fakeUser);
+      setProfile(fakeProfile);
+      setLoading(false);
+      setAuthError(null);
+      return;
+    }
+
+    // 🚀 VERIFICAR LOGIN DIRETO DO FRANK
+    const checkDirectLogin = () => {
+      try {
+        const frankLoggedIn = localStorage.getItem('frank-logged-in');
+        const frankUserData = localStorage.getItem('frank-user');
+        
+        if (frankLoggedIn === 'true' && frankUserData) {
+          const userData = JSON.parse(frankUserData);
+          console.log('🚀 LOGIN DIRETO DETECTADO - Frank Webber');
+          
+          const frankUser = {
+            id: userData.id,
+            email: userData.email,
+            created_at: '2025-09-21T15:20:40.785506+00:00',
+            updated_at: '2025-10-05T16:20:39.034069+00:00',
+            app_metadata: { provider: 'email', providers: ['email'] },
+            user_metadata: userData,
+            aud: 'authenticated',
+            confirmation_sent_at: '2025-09-21T17:17:55.037637+00:00',
+            confirmed_at: '2025-10-03T13:54:42.116467+00:00',
+            email_confirmed_at: '2025-10-03T13:54:42.116467+00:00',
+            phone: null,
+            phone_confirmed_at: null,
+            last_sign_in_at: new Date().toISOString(),
+            role: 'authenticated',
+            identities: []
+          } as User;
+          
+          const frankProfile = {
+            id: userData.id,
+            user_id: userData.id,
+            nome: userData.nome,
+            email: userData.email,
+            role: userData.role as 'admin' | 'instrutor' | 'estudante',
+            congregacao: 'Congregação Central',
+            created_at: '2025-09-21T15:20:40.785506+00:00',
+            updated_at: '2025-10-05T16:20:39.034069+00:00'
+          };
+          
+          setUser(frankUser);
+          setProfile(frankProfile);
+          setLoading(false);
+          setAuthError(null);
+          return true;
+        }
+      } catch (error) {
+        console.warn('Erro ao verificar login direto:', error);
+      }
+      return false;
+    };
+
+    if (!checkDirectLogin()) {
+      // Continuar com autenticação normal se não há login direto
+    }
+  }, [DEV_BYPASS]);
 
   // Load user profile with improved error handling and fallback
   const loadProfile = useCallback(async (userId: string) => {

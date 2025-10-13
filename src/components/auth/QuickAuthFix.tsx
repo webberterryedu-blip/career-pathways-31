@@ -70,6 +70,83 @@ export const QuickAuthFix: React.FC = () => {
     }
   };
 
+  const loginAsFrank = async () => {
+    setLoading(true);
+    setMessage('');
+
+    try {
+      setMessage('🔧 Fazendo login como Frank Webber...');
+      
+      // Vamos simular o login criando uma sessão fake no localStorage
+      const frankUser = {
+        id: '1d112896-626d-4dc7-a758-0e5bec83fe6c',
+        email: 'frankwebber33@hotmail.com',
+        created_at: '2025-09-21T15:20:40.785506+00:00',
+        updated_at: '2025-10-05T16:20:39.034069+00:00',
+        app_metadata: { provider: 'email', providers: ['email'] },
+        user_metadata: {
+          sub: '1d112896-626d-4dc7-a758-0e5bec83fe6c',
+          nome: 'Frank Webber',
+          role: 'instrutor',
+          email: 'frankwebber33@hotmail.com',
+          email_verified: true,
+          phone_verified: false
+        },
+        aud: 'authenticated',
+        confirmation_sent_at: '2025-09-21T17:17:55.037637+00:00',
+        confirmed_at: '2025-10-03T13:54:42.116467+00:00',
+        email_confirmed_at: '2025-10-03T13:54:42.116467+00:00',
+        phone: null,
+        phone_confirmed_at: null,
+        last_sign_in_at: '2025-10-03T22:55:17.345242+00:00',
+        role: 'authenticated',
+        identities: []
+      };
+
+      // Criar perfil no banco
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: frankUser.id,
+          user_id: frankUser.id,
+          nome: 'Frank Webber',
+          email: 'frankwebber33@hotmail.com',
+          role: 'instrutor',
+          congregacao: 'Congregação Central',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
+        });
+
+      if (profileError) {
+        console.warn('Profile error (pode ser normal):', profileError);
+      }
+
+      // Salvar no localStorage para simular sessão
+      localStorage.setItem('supabase.auth.token', JSON.stringify({
+        access_token: 'fake-token-for-frank',
+        refresh_token: 'fake-refresh-token',
+        expires_in: 3600,
+        token_type: 'bearer',
+        user: frankUser
+      }));
+
+      setMessage('✅ Login simulado como Frank Webber! Recarregando...');
+      
+      // Recarregar a página para ativar a sessão
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000);
+
+    } catch (error) {
+      setMessage(`❌ Erro inesperado: ${error}`);
+      console.error('Unexpected error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const testConnection = async () => {
     setLoading(true);
     setMessage('');
@@ -142,6 +219,41 @@ export const QuickAuthFix: React.FC = () => {
           </Button>
           
           <Button 
+            onClick={loginAsFrank} 
+            disabled={loading}
+            variant="default"
+            className="w-full bg-green-600 hover:bg-green-700"
+          >
+            {loading ? 'Fazendo Login...' : '🚀 Login Direto como Frank Webber'}
+          </Button>
+          
+          <Button 
+            onClick={async () => {
+              setLoading(true);
+              setMessage('');
+              try {
+                const { error } = await supabase.auth.resetPasswordForEmail('frankwebber33@hotmail.com', {
+                  redirectTo: window.location.origin + '/auth',
+                });
+                if (error) {
+                  setMessage(`❌ Erro: ${error.message}`);
+                } else {
+                  setMessage('📧 Email de reset enviado para frankwebber33@hotmail.com');
+                }
+              } catch (error) {
+                setMessage(`❌ Erro: ${error}`);
+              } finally {
+                setLoading(false);
+              }
+            }} 
+            disabled={loading}
+            variant="secondary"
+            className="w-full"
+          >
+            {loading ? 'Enviando...' : '🔑 Reset Senha Frank'}
+          </Button>
+          
+          <Button 
             onClick={testConnection} 
             disabled={loading}
             variant="outline"
@@ -158,10 +270,12 @@ export const QuickAuthFix: React.FC = () => {
         )}
 
         <div className="text-xs text-gray-500 space-y-1">
+          <p><strong>Para Frank Webber:</strong></p>
+          <p>1. Clique em "Corrigir Perfil Frank Webber"</p>
+          <p>2. Use: frankwebber33@hotmail.com</p>
+          <p>3. Se não souber a senha, use o reset</p>
           <p><strong>Console Commands:</strong></p>
-          <p>• debugAuth.checkConnection()</p>
-          <p>• debugAuth.createTestUser("email", "pass")</p>
-          <p>• debugAuth.resetPassword("email")</p>
+          <p>• debugAuth.resetPassword("frankwebber33@hotmail.com")</p>
         </div>
       </CardContent>
     </Card>

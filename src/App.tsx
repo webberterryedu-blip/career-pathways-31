@@ -21,6 +21,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineErrorBoundary } from "@/components/OfflineErrorBoundary";
 import { initializeDebugUtils } from "@/utils/debugOffline";
 import { initializeAuthDebugUtils } from "@/utils/debugAuth";
+import { DevBypassNotification } from "@/components/DevBypassNotification";
+import { DevBypassRedirect } from "@/components/DevBypassRedirect";
 
 // Eager load critical components
 // import Index from "./pages/Index";
@@ -53,10 +55,6 @@ const PrimeiroPrograma = lazy(() => import("./pages/PrimeiroPrograma"));
 const Reunioes = lazy(() => import("./pages/Reunioes"));
 const OfflineTestPage = lazy(() => import("./pages/Demo")); // Placeholder
 
-// Dev-only lazy loads
-const ProgramasTest = lazy(() => import("./pages/ProgramasTest"));
-const DensityToggleTestPage = lazy(() => import("./pages/DensityToggleTest"));
-const ZoomResponsivenessTestPage = lazy(() => import("./pages/ZoomResponsivenessTest"));
 
 // Create optimized query client with enhanced caching
 const queryClient = createQueryClient();
@@ -161,6 +159,7 @@ const App = () => {
                         <TooltipProvider>
                           <Sonner />
                           <TutorialOverlay />
+                          {!(typeof window !== 'undefined' && window.location.pathname === '/auth') && <DevBypassNotification />}
                           <BrowserRouter
                             future={{
                               v7_startTransition: true,
@@ -172,8 +171,16 @@ const App = () => {
                                 <Suspense fallback={<PageLoader />}>
                                 <Routes>
                     {/* Public Routes */}
-                    <Route path="/" element={<Navigate to="/auth" replace />} />
-                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/" element={
+                      import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true' 
+                        ? <Navigate to="/dashboard" replace />
+                        : <Navigate to="/auth" replace />
+                    } />
+                    <Route path="/auth" element={
+                      <DevBypassRedirect>
+                        <Auth />
+                      </DevBypassRedirect>
+                    } />
                     <Route path="/demo" element={<Demo />} />
                     <Route path="/funcionalidades" element={<Funcionalidades />} />
                     <Route path="/congregacoes" element={<Congregacoes />} />
@@ -210,17 +217,6 @@ const App = () => {
                     {/* Debug Routes - Only in development */}
                     {import.meta.env.DEV && (
                       <>
-                        <Route path="/density-toggle-test" element={<DensityToggleTestPage />} />
-                        <Route path="/zoom-responsiveness-test" element={<ZoomResponsivenessTestPage />} />
-                        <Route path="/offline-test" element={<OfflineTestPage />} />
-                        <Route
-                          path="/programas-test"
-                          element={
-                            <ProtectedRoute allowedRoles={['instrutor']}>
-                              <ProgramasTest />
-                            </ProtectedRoute>
-                          }
-                        />
                       </>
                     )}
 
@@ -338,10 +334,12 @@ const App = () => {
                             </NavigationProvider>
                           </BrowserRouter>
 
-                          {/* Auth Recovery Button */}
-                          <div className="fixed top-4 right-4 z-50">
-                            <AuthRecoveryButton />
-                          </div>
+                          {/* Auth Recovery Button (hidden on /auth) */}
+                          {!(typeof window !== 'undefined' && window.location.pathname === '/auth') && (
+                            <div className="fixed top-4 right-4 z-50">
+                              <AuthRecoveryButton />
+                            </div>
+                          )}
                         </TooltipProvider>
                       </TutorialProvider>
                     </StudentProvider>
