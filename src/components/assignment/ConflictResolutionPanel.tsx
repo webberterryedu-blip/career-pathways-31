@@ -427,10 +427,10 @@ export function ConflictResolutionPanel({
                                   <div className="text-xs text-muted-foreground">{suggestion.details}</div>
                                 )}
                                 <div className="flex items-center gap-2 mt-1">
-                                  <Badge variant="outline" size="sm" className={getImpactColor(suggestion.impact)}>
+                                  <Badge variant="outline" className={`text-xs ${getImpactColor(suggestion.impact)}`}>
                                     {suggestion.impact} impact
                                   </Badge>
-                                  <Badge variant="outline" size="sm">
+                                  <Badge variant="outline" className="text-xs">
                                     {suggestion.confidence}% confidence
                                   </Badge>
                                 </div>

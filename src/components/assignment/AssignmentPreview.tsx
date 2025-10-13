@@ -26,7 +26,6 @@ import {
   Download,
   Share,
   Edit,
-  Family,
   Award,
   BarChart3
 } from 'lucide-react';
@@ -202,8 +201,8 @@ export function AssignmentPreview({
                 </div>
                 {/* Family indicator */}
                 {assignment.student.familia_id === assignment.assistant.familia_id && (
-                  <Badge variant="outline" size="sm">
-                    <Family className="h-3 w-3 mr-1" />
+                  <Badge variant="outline" className="text-xs">
+                    <Users className="h-3 w-3 mr-1" />
                     Family
                   </Badge>
                 )}
