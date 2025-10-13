@@ -21,7 +21,7 @@ import {
   Zap,
   Calendar,
   Clock,
-  Activity
+  BarChart3
 } from "lucide-react";
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import QualificacoesAvancadas from "@/components/QualificacoesAvancadas";
@@ -164,7 +164,7 @@ const RelatoriosPage = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Activity className="w-5 h-5" />
+              <BarChart3 className="w-5 h-5" />
               Visão Geral em Tempo Real
             </CardTitle>
             <CardDescription>

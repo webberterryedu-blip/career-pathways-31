@@ -11,14 +11,13 @@ import { usePerformanceMetrics } from '@/hooks/usePerformanceMonitoring';
 import { useAnalytics } from '@/services/analytics';
 import { useErrorTracking } from '@/services/errorTracking';
 import { useUsageAnalytics } from '@/services/usageAnalytics';
-import { 
-  Activity, 
-  AlertTriangle, 
-  BarChart3, 
-  Clock, 
-  Users, 
-  Zap,
+import {
   TrendingUp,
+  AlertTriangle,
+  BarChart3,
+  Clock,
+  Users,
+  Zap,
   TrendingDown,
   Eye,
   MousePointer,
@@ -51,7 +50,7 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classN
     };
 
     fetchData();
-    
+
     // Set up auto-refresh
     const interval = setInterval(fetchData, 5000); // Refresh every 5 seconds
     setRefreshInterval(interval);
@@ -125,7 +124,7 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classN
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -199,8 +198,8 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classN
                               {formatDuration(component.renderTime)}
                             </span>
                           </div>
-                          <Progress 
-                            value={Math.min((component.renderTime / 50) * 100, 100)} 
+                          <Progress
+                            value={Math.min((component.renderTime / 50) * 100, 100)}
                             className="h-2 mt-1"
                           />
                         </div>
@@ -232,7 +231,7 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classN
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Events</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -333,20 +332,23 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classN
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {Object.entries(errorData.byCategory).map(([category, count]) => (
-                    <div key={category} className="flex items-center space-x-4">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium capitalize">{category}</span>
-                          <span className="text-xs text-muted-foreground">{count}</span>
+                  {Object.entries(errorData.byCategory).map(([category, count]) => {
+                    const countNum = Number(count);
+                    return (
+                      <div key={category} className="flex items-center space-x-4">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium capitalize">{category}</span>
+                            <span className="text-xs text-muted-foreground">{countNum}</span>
+                          </div>
+                          <Progress
+                            value={(countNum / errorData.total) * 100}
+                            className="h-2 mt-1"
+                          />
                         </div>
-                        <Progress 
-                          value={(count as number / errorData.total) * 100} 
-                          className="h-2 mt-1"
-                        />
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
@@ -419,22 +421,26 @@ export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classN
               <CardContent>
                 <div className="space-y-4">
                   {Object.entries(usageData.featureUsage)
-                    .sort(([,a], [,b]) => (b as number) - (a as number))
+                    .sort(([, a], [, b]) => (b as number) - (a as number))
                     .slice(0, 10)
-                    .map(([feature, count]) => (
-                      <div key={feature} className="flex items-center space-x-4">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">{feature}</span>
-                            <span className="text-xs text-muted-foreground">{count} uses</span>
+                    .map(([feature, count]) => {
+                      const countNum = Number(count);
+                      const maxCount = Math.max(...Object.values(usageData.featureUsage).map(Number));
+                      return (
+                        <div key={feature} className="flex items-center space-x-4">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">{feature}</span>
+                              <span className="text-xs text-muted-foreground">{countNum} uses</span>
+                            </div>
+                            <Progress
+                              value={(countNum / maxCount) * 100}
+                              className="h-2 mt-1"
+                            />
                           </div>
-                          <Progress 
-                            value={(count as number / Math.max(...Object.values(usageData.featureUsage))) * 100} 
-                            className="h-2 mt-1"
-                          />
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </div>
               </CardContent>
             </Card>
