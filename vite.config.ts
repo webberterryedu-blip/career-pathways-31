@@ -1,49 +1,21 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-  },
-  plugins: [
-    react(),
-    mode === 'development' && componentTagger(),
-  ].filter(Boolean),
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': resolve(__dirname, 'src'),
     },
   },
+  base: '/',
   build: {
     rollupOptions: {
-      output: {
-        manualChunks: {
-          // Vendor chunks
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-          'ag-grid-vendor': ['ag-grid-community', 'ag-grid-react'],
-          'utils-vendor': ['date-fns', 'clsx', 'class-variance-authority'],
-          
-          // App chunks
-                    'dashboard': ['src/pages/InstrutorDashboard.tsx', 'src/pages/Dashboard.tsx'],
-          'estudantes': ['src/pages/EstudantesPage.tsx', 'src/hooks/useSpreadsheetImport.ts'],
-          'programas': ['src/pages/ProgramasPage.tsx', 'src/pages/Programas.tsx'],
-          'designacoes': ['src/pages/DesignacoesPage.tsx', 'src/pages/Designacoes.tsx']
-        }
-      }
+      input: {
+        main: resolve(__dirname, 'index.html'),
+      },
     },
-    chunkSizeWarningLimit: 500,
-    target: 'esnext',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: mode === 'production',
-        drop_debugger: mode === 'production'
-      }
-    }
-  }
-}));
+  },
+})
