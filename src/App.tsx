@@ -33,7 +33,7 @@ import AuthRecoveryButton from "./components/AuthRecoveryButton";
 import { Button } from "@/components/ui/button";
 
 // Lazy load heavy components
-const InstrutorDashboard = lazy(() => import("./pages/InstrutorDashboard"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 const EstudantesPage = lazy(() => import("./pages/EstudantesPage"));
 const ProgramasPage = lazy(() => import("./pages/ProgramasPage"));
 const DesignacoesPage = lazy(() => import("./pages/DesignacoesPage"));
@@ -229,12 +229,12 @@ const App = () => {
                                       </ProtectedRoute>
                                     }
                                   >
-                                    {/* Dashboard Principal */}
+                                    {/* Dashboard Principal - Unified for all roles */}
                                     <Route 
                                       path="dashboard" 
                                       element={
                                         <Suspense fallback={<RouteLoader />}>
-                                          <InstrutorDashboard />
+                                          <Dashboard />
                                         </Suspense>
                                       } 
                                     />

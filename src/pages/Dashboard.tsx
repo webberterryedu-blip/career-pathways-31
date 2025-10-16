@@ -20,6 +20,8 @@ import { useEstudantes } from "@/hooks/useEstudantes";
 import { useDesignacoesPendentes } from "@/hooks/useDesignacoesPendentes";
 import { useAssignmentContext } from "@/contexts/AssignmentContext";
 import { useStudentContext } from "@/contexts/StudentContext";
+import { useProgramContext } from "@/contexts/ProgramContext";
+import { StatsCard } from "@/components/common/StatsCard";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -28,6 +30,7 @@ const Dashboard = () => {
   const { stats: designacoesStats, isLoading: designacoesLoading } = useDesignacoesPendentes();
   const { assignments } = useAssignmentContext();
   const { getAvailableStudents } = useStudentContext();
+  const { programs, activeProgram } = useProgramContext();
   
   // Enhanced statistics with assignment overview and student status
   const stats = useMemo(() => {
@@ -62,51 +65,41 @@ const Dashboard = () => {
   return (
     <UnifiedLayout>
       <div className="space-y-6">
-        {/* Enhanced statistics cards with assignment overview and student status */}
+        {/* Consolidated statistics cards using reusable StatsCard component */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Estudantes</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalEstudantes}</div>
-              <p className="text-xs text-muted-foreground">Cadastrados no sistema</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Total de Estudantes"
+            value={stats.totalEstudantes}
+            description="Cadastrados no sistema"
+            icon={Users}
+          />
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Estudantes Disponíveis</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.availableStudents}</div>
-              <p className="text-xs text-muted-foreground">Disponíveis para designações</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Estudantes Disponíveis"
+            value={stats.availableStudents}
+            description="Disponíveis para designações"
+            icon={CheckCircle}
+            iconColor="text-green-600"
+            valueColor="text-green-600"
+          />
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Próximas Designações</CardTitle>
-              <ClipboardList className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.upcomingAssignments}</div>
-              <p className="text-xs text-muted-foreground">Nas próximas semanas</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Próximas Designações"
+            value={stats.upcomingAssignments}
+            description="Nas próximas semanas"
+            icon={ClipboardList}
+            iconColor="text-blue-600"
+            valueColor="text-blue-600"
+          />
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Próxima Reunião</CardTitle>
-              <Calendar className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600">12/12</div>
-              <p className="text-xs text-muted-foreground">Quinta-feira</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            title="Programas Ativos"
+            value={programs.filter(p => p.isActive).length}
+            description={activeProgram ? activeProgram.title : 'Nenhum programa ativo'}
+            icon={Calendar}
+            iconColor="text-purple-600"
+            valueColor="text-purple-600"
+          />
         </div>
 
         {/* Enhanced quick actions with centralized dashboard functionality */}
