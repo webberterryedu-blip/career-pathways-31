@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { offlineSyncManager, SyncStatus } from '../../services/offlineSync';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Alert, AlertDescription } from '../ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Wifi, 
   WifiOff, 

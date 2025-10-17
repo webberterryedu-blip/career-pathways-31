@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppError } from '../utils/errorHandler';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from './ui/button';
 import { X, AlertTriangle, Info, CheckCircle, XCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
