@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { errorHandler, AppError, ErrorType } from '../utils/errorHandler';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from './ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 

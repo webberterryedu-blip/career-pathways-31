@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Alert, AlertDescription } from '../ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ValidationIssue } from '../../utils/validation';
 import { cn } from '../../lib/utils';
 import { AlertTriangle, Info } from 'lucide-react';
