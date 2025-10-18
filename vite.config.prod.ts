@@ -19,6 +19,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
           {
@@ -89,18 +90,7 @@ export default defineConfig({
   build: {
     // 🎯 Target otimizado
     target: 'esnext',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
-        passes: 2,
-      },
-      mangle: {
-        toplevel: true,
-      },
-    },
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         // 📦 Code splitting otimizado

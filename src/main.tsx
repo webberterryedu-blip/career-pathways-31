@@ -11,6 +11,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import SafeAreaLayout from "@/layouts/SafeAreaLayout";
 import { DensityProvider } from "@/contexts/DensityContext";
 import { monitorWebVitals, analyzeBundle } from './config/performance';
+import CacheBuster from '@/components/CacheBuster';
 
 // Register Service Worker only in production to avoid HMR conflicts in dev
 if (import.meta.env.PROD) {
@@ -28,6 +29,7 @@ const renderApp = () => {
   
   root.render(
     <React.StrictMode>
+      <CacheBuster />
       <ErrorBoundary>
         <DensityProvider>
           <SafeAreaLayout>
