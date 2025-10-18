@@ -1,37 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Define a type for import.meta.env to avoid TypeScript errors
-interface ImportMetaEnv {
-  VITE_SUPABASE_URL?: string;
-  VITE_SUPABASE_ANON_KEY?: string;
-  DEV?: boolean;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
-// Unified Supabase client for the frontend
-// Reads configuration from Vite environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-// Debug environment variables
-if (import.meta.env.DEV) {
-  console.log('Supabase URL:', supabaseUrl);
-  console.log('Supabase ANON Key exists:', !!supabaseAnonKey);
-  console.log('Supabase ANON Key length:', supabaseAnonKey?.length || 0);
-}
-
-// Validate environment variables
-if (!supabaseUrl) {
-  throw new Error('Missing VITE_SUPABASE_URL environment variable');
-}
-
-if (!supabaseAnonKey) {
-  throw new Error('Missing VITE_SUPABASE_ANON_KEY environment variable');
-}
+// Supabase configuration - hardcoded for Lovable deployment
+const supabaseUrl = 'https://jbapewpuvfijrkhlbsid.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiYXBld3B1dmZpanJraGxic2lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNzQ4NzcsImV4cCI6MjA3Mzk1MDg3N30.kaj9f-oVMlpzddZbBilbU81grVVpmLjKKmUG-zpKoSg';
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

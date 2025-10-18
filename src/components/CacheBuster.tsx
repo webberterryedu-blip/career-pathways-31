@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
+const APP_VERSION = '1.0.1'; // Increment this on each deployment
 const VERSION_KEY = 'app_version';
 
 /**
@@ -48,8 +48,8 @@ export const CacheBuster = () => {
       }
     };
 
-    // Only run in production
-    if (import.meta.env.PROD) {
+    // Only run in production (detect by checking for localhost)
+    if (!window.location.hostname.includes('localhost')) {
       checkVersion();
     }
   }, []);

@@ -9,11 +9,10 @@ export const verifySystemStatus = async () => {
   const mockMode = isMockMode();
   console.log('Mock Mode:', mockMode ? 'ENABLED 🧪' : 'DISABLED 🚀');
   
-  // Check environment variables
-  console.log('Environment Variables:');
-  console.log('- VITE_MOCK_MODE:', import.meta.env.VITE_MOCK_MODE);
-  console.log('- VITE_SUPABASE_URL exists:', !!import.meta.env.VITE_SUPABASE_URL);
-  console.log('- VITE_SUPABASE_ANON_KEY exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+  // Check Supabase configuration
+  console.log('Supabase Configuration:');
+  console.log('- URL: https://jbapewpuvfijrkhlbsid.supabase.co');
+  console.log('- Authentication: Configured');
   
   // If not in mock mode, test Supabase connection
   if (!mockMode) {
