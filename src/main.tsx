@@ -29,8 +29,8 @@ const renderApp = () => {
   
   root.render(
     <React.StrictMode>
-      <CacheBuster />
       <ErrorBoundary>
+        <CacheBuster />
         <DensityProvider>
           <SafeAreaLayout>
             <App />
