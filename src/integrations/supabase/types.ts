@@ -14,7 +14,331 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      designacoes: {
+        Row: {
+          assistente_id: string | null
+          cancelado_em: string | null
+          confirmado_em: string | null
+          created_at: string
+          data_designacao: string
+          estudante_id: string
+          id: string
+          motivo_cancelamento: string | null
+          observacoes: string | null
+          parte_id: string
+          status: Database["public"]["Enums"]["status_designacao"]
+          updated_at: string
+        }
+        Insert: {
+          assistente_id?: string | null
+          cancelado_em?: string | null
+          confirmado_em?: string | null
+          created_at?: string
+          data_designacao?: string
+          estudante_id: string
+          id?: string
+          motivo_cancelamento?: string | null
+          observacoes?: string | null
+          parte_id: string
+          status?: Database["public"]["Enums"]["status_designacao"]
+          updated_at?: string
+        }
+        Update: {
+          assistente_id?: string | null
+          cancelado_em?: string | null
+          confirmado_em?: string | null
+          created_at?: string
+          data_designacao?: string
+          estudante_id?: string
+          id?: string
+          motivo_cancelamento?: string | null
+          observacoes?: string | null
+          parte_id?: string
+          status?: Database["public"]["Enums"]["status_designacao"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "designacoes_assistente_id_fkey"
+            columns: ["assistente_id"]
+            isOneToOne: false
+            referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "designacoes_estudante_id_fkey"
+            columns: ["estudante_id"]
+            isOneToOne: false
+            referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "designacoes_parte_id_fkey"
+            columns: ["parte_id"]
+            isOneToOne: true
+            referencedRelation: "partes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estudantes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          data_batismo: string | null
+          email: string | null
+          genero: Database["public"]["Enums"]["genero"]
+          id: string
+          nome: string
+          observacoes: string | null
+          privilegio: Database["public"]["Enums"]["privilegio"]
+          sobrenome: string
+          telefone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          data_batismo?: string | null
+          email?: string | null
+          genero: Database["public"]["Enums"]["genero"]
+          id?: string
+          nome: string
+          observacoes?: string | null
+          privilegio?: Database["public"]["Enums"]["privilegio"]
+          sobrenome: string
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          data_batismo?: string | null
+          email?: string | null
+          genero?: Database["public"]["Enums"]["genero"]
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          privilegio?: Database["public"]["Enums"]["privilegio"]
+          sobrenome?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      historico_designacoes: {
+        Row: {
+          acao: string
+          alterado_por: string | null
+          assistente_anterior_id: string | null
+          assistente_novo_id: string | null
+          created_at: string
+          designacao_id: string
+          estudante_anterior_id: string | null
+          estudante_novo_id: string | null
+          id: string
+          motivo: string | null
+        }
+        Insert: {
+          acao: string
+          alterado_por?: string | null
+          assistente_anterior_id?: string | null
+          assistente_novo_id?: string | null
+          created_at?: string
+          designacao_id: string
+          estudante_anterior_id?: string | null
+          estudante_novo_id?: string | null
+          id?: string
+          motivo?: string | null
+        }
+        Update: {
+          acao?: string
+          alterado_por?: string | null
+          assistente_anterior_id?: string | null
+          assistente_novo_id?: string | null
+          created_at?: string
+          designacao_id?: string
+          estudante_anterior_id?: string | null
+          estudante_novo_id?: string | null
+          id?: string
+          motivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_designacoes_assistente_anterior_id_fkey"
+            columns: ["assistente_anterior_id"]
+            isOneToOne: false
+            referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_designacoes_assistente_novo_id_fkey"
+            columns: ["assistente_novo_id"]
+            isOneToOne: false
+            referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_designacoes_designacao_id_fkey"
+            columns: ["designacao_id"]
+            isOneToOne: false
+            referencedRelation: "designacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_designacoes_estudante_anterior_id_fkey"
+            columns: ["estudante_anterior_id"]
+            isOneToOne: false
+            referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_designacoes_estudante_novo_id_fkey"
+            columns: ["estudante_novo_id"]
+            isOneToOne: false
+            referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partes: {
+        Row: {
+          created_at: string
+          duracao_min: number
+          genero_requerido: Database["public"]["Enums"]["genero"] | null
+          id: string
+          ordem: number
+          programa_id: string
+          requer_anciao: boolean
+          requer_assistente: boolean
+          requer_servo_ministerial: boolean
+          secao: Database["public"]["Enums"]["secao_reuniao"]
+          tipo_parte_id: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          duracao_min: number
+          genero_requerido?: Database["public"]["Enums"]["genero"] | null
+          id?: string
+          ordem: number
+          programa_id: string
+          requer_anciao?: boolean
+          requer_assistente?: boolean
+          requer_servo_ministerial?: boolean
+          secao: Database["public"]["Enums"]["secao_reuniao"]
+          tipo_parte_id: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          duracao_min?: number
+          genero_requerido?: Database["public"]["Enums"]["genero"] | null
+          id?: string
+          ordem?: number
+          programa_id?: string
+          requer_anciao?: boolean
+          requer_assistente?: boolean
+          requer_servo_ministerial?: boolean
+          secao?: Database["public"]["Enums"]["secao_reuniao"]
+          tipo_parte_id?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partes_programa_id_fkey"
+            columns: ["programa_id"]
+            isOneToOne: false
+            referencedRelation: "programas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partes_tipo_parte_id_fkey"
+            columns: ["tipo_parte_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_parte"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          data_reuniao: string
+          id: string
+          id_semana: string
+          leitura_biblia: string | null
+          tema: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          data_reuniao: string
+          id?: string
+          id_semana: string
+          leitura_biblia?: string | null
+          tema: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          data_reuniao?: string
+          id?: string
+          id_semana?: string
+          leitura_biblia?: string | null
+          tema?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tipos_parte: {
+        Row: {
+          codigo: string
+          created_at: string
+          descricao: string | null
+          duracao_padrao_min: number
+          genero_requerido: Database["public"]["Enums"]["genero"] | null
+          id: string
+          nome: string
+          requer_anciao: boolean
+          requer_assistente: boolean
+          requer_servo_ministerial: boolean
+          secao: Database["public"]["Enums"]["secao_reuniao"]
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          descricao?: string | null
+          duracao_padrao_min: number
+          genero_requerido?: Database["public"]["Enums"]["genero"] | null
+          id?: string
+          nome: string
+          requer_anciao?: boolean
+          requer_assistente?: boolean
+          requer_servo_ministerial?: boolean
+          secao: Database["public"]["Enums"]["secao_reuniao"]
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          descricao?: string | null
+          duracao_padrao_min?: number
+          genero_requerido?: Database["public"]["Enums"]["genero"] | null
+          id?: string
+          nome?: string
+          requer_anciao?: boolean
+          requer_assistente?: boolean
+          requer_servo_ministerial?: boolean
+          secao?: Database["public"]["Enums"]["secao_reuniao"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +347,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      genero: "masculino" | "feminino"
+      privilegio: "anciao" | "servo_ministerial" | "publicador"
+      secao_reuniao: "tesouros" | "ministerio" | "vida_crista"
+      status_designacao: "designado" | "confirmado" | "cancelado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +477,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      genero: ["masculino", "feminino"],
+      privilegio: ["anciao", "servo_ministerial", "publicador"],
+      secao_reuniao: ["tesouros", "ministerio", "vida_crista"],
+      status_designacao: ["designado", "confirmado", "cancelado"],
+    },
   },
 } as const
