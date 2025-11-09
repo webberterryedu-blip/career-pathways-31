@@ -417,7 +417,14 @@ export type Database = {
     }
     Enums: {
       genero: "masculino" | "feminino"
-      privilegio: "anciao" | "servo_ministerial" | "publicador"
+      privilegio:
+        | "anciao"
+        | "servo_ministerial"
+        | "publicador"
+        | "pioneiro_regular"
+        | "publicador_batizado"
+        | "publicador_nao_batizado"
+        | "estudante_novo"
       secao_reuniao: "tesouros" | "ministerio" | "vida_crista"
       status_designacao: "designado" | "confirmado" | "cancelado"
     }
@@ -548,7 +555,15 @@ export const Constants = {
   public: {
     Enums: {
       genero: ["masculino", "feminino"],
-      privilegio: ["anciao", "servo_ministerial", "publicador"],
+      privilegio: [
+        "anciao",
+        "servo_ministerial",
+        "publicador",
+        "pioneiro_regular",
+        "publicador_batizado",
+        "publicador_nao_batizado",
+        "estudante_novo",
+      ],
       secao_reuniao: ["tesouros", "ministerio", "vida_crista"],
       status_designacao: ["designado", "confirmado", "cancelado"],
     },
