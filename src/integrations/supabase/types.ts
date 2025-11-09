@@ -84,46 +84,115 @@ export type Database = {
       estudantes: {
         Row: {
           ativo: boolean
+          chairman: boolean | null
+          coabitacao: boolean | null
           created_at: string
           data_batismo: string | null
+          data_nascimento: string | null
           email: string | null
+          estado_civil: string | null
+          explaining: boolean | null
+          familia: string | null
+          family_id: string | null
+          following: boolean | null
+          gems: boolean | null
           genero: Database["public"]["Enums"]["genero"]
           id: string
+          id_conjuge: string | null
+          id_mae: string | null
+          id_pai: string | null
+          idade: number | null
+          making: boolean | null
+          menor: boolean | null
           nome: string
           observacoes: string | null
+          papel_familiar: string | null
+          pray: boolean | null
           privilegio: Database["public"]["Enums"]["privilegio"]
+          reading: boolean | null
+          responsavel_primario: string | null
+          responsavel_secundario: string | null
           sobrenome: string
+          starting: boolean | null
+          talk: boolean | null
           telefone: string | null
+          treasures: boolean | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           ativo?: boolean
+          chairman?: boolean | null
+          coabitacao?: boolean | null
           created_at?: string
           data_batismo?: string | null
+          data_nascimento?: string | null
           email?: string | null
+          estado_civil?: string | null
+          explaining?: boolean | null
+          familia?: string | null
+          family_id?: string | null
+          following?: boolean | null
+          gems?: boolean | null
           genero: Database["public"]["Enums"]["genero"]
           id?: string
+          id_conjuge?: string | null
+          id_mae?: string | null
+          id_pai?: string | null
+          idade?: number | null
+          making?: boolean | null
+          menor?: boolean | null
           nome: string
           observacoes?: string | null
+          papel_familiar?: string | null
+          pray?: boolean | null
           privilegio?: Database["public"]["Enums"]["privilegio"]
+          reading?: boolean | null
+          responsavel_primario?: string | null
+          responsavel_secundario?: string | null
           sobrenome: string
+          starting?: boolean | null
+          talk?: boolean | null
           telefone?: string | null
+          treasures?: boolean | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           ativo?: boolean
+          chairman?: boolean | null
+          coabitacao?: boolean | null
           created_at?: string
           data_batismo?: string | null
+          data_nascimento?: string | null
           email?: string | null
+          estado_civil?: string | null
+          explaining?: boolean | null
+          familia?: string | null
+          family_id?: string | null
+          following?: boolean | null
+          gems?: boolean | null
           genero?: Database["public"]["Enums"]["genero"]
           id?: string
+          id_conjuge?: string | null
+          id_mae?: string | null
+          id_pai?: string | null
+          idade?: number | null
+          making?: boolean | null
+          menor?: boolean | null
           nome?: string
           observacoes?: string | null
+          papel_familiar?: string | null
+          pray?: boolean | null
           privilegio?: Database["public"]["Enums"]["privilegio"]
+          reading?: boolean | null
+          responsavel_primario?: string | null
+          responsavel_secundario?: string | null
           sobrenome?: string
+          starting?: boolean | null
+          talk?: boolean | null
           telefone?: string | null
+          treasures?: boolean | null
           updated_at?: string
           user_id?: string | null
         }
