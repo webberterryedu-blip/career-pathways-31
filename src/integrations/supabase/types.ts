@@ -455,6 +455,33 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          nome: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          nome?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          nome?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       programas: {
         Row: {
           ativo: boolean
@@ -485,6 +512,39 @@ export type Database = {
           leitura_biblia?: string | null
           tema?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      programas_ministeriais: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_url: string | null
+          ativo: boolean | null
+          created_at: string | null
+          data_importacao: string | null
+          id: string
+          mes_ano: string
+          updated_at: string | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          ativo?: boolean | null
+          created_at?: string | null
+          data_importacao?: string | null
+          id?: string
+          mes_ano: string
+          updated_at?: string | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          ativo?: boolean | null
+          created_at?: string | null
+          data_importacao?: string | null
+          id?: string
+          mes_ano?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
