@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignment_history: {
+        Row: {
+          assignment_duration: number | null
+          assignment_title: string
+          assignment_type: string
+          assistant_id: string | null
+          assistant_name: string | null
+          created_at: string | null
+          id: string
+          meeting_date: string
+          observations: string | null
+          status: string | null
+          student_id: string
+          student_name: string
+          updated_at: string | null
+          week: string
+        }
+        Insert: {
+          assignment_duration?: number | null
+          assignment_title: string
+          assignment_type: string
+          assistant_id?: string | null
+          assistant_name?: string | null
+          created_at?: string | null
+          id?: string
+          meeting_date: string
+          observations?: string | null
+          status?: string | null
+          student_id: string
+          student_name: string
+          updated_at?: string | null
+          week: string
+        }
+        Update: {
+          assignment_duration?: number | null
+          assignment_title?: string
+          assignment_type?: string
+          assistant_id?: string | null
+          assistant_name?: string | null
+          created_at?: string | null
+          id?: string
+          meeting_date?: string
+          observations?: string | null
+          status?: string | null
+          student_id?: string
+          student_name?: string
+          updated_at?: string | null
+          week?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_history_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: false
+            referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_history_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: false
+            referencedRelation: "vw_estudantes_grid"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "vw_estudantes_grid"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       designacoes: {
         Row: {
           assistente_id: string | null
@@ -66,10 +146,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "designacoes_assistente_id_fkey"
+            columns: ["assistente_id"]
+            isOneToOne: false
+            referencedRelation: "vw_estudantes_grid"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "designacoes_estudante_id_fkey"
             columns: ["estudante_id"]
             isOneToOne: false
             referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "designacoes_estudante_id_fkey"
+            columns: ["estudante_id"]
+            isOneToOne: false
+            referencedRelation: "vw_estudantes_grid"
             referencedColumns: ["id"]
           },
           {
@@ -244,10 +338,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "historico_designacoes_assistente_anterior_id_fkey"
+            columns: ["assistente_anterior_id"]
+            isOneToOne: false
+            referencedRelation: "vw_estudantes_grid"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "historico_designacoes_assistente_novo_id_fkey"
             columns: ["assistente_novo_id"]
             isOneToOne: false
             referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_designacoes_assistente_novo_id_fkey"
+            columns: ["assistente_novo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_estudantes_grid"
             referencedColumns: ["id"]
           },
           {
@@ -265,10 +373,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "historico_designacoes_estudante_anterior_id_fkey"
+            columns: ["estudante_anterior_id"]
+            isOneToOne: false
+            referencedRelation: "vw_estudantes_grid"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "historico_designacoes_estudante_novo_id_fkey"
             columns: ["estudante_novo_id"]
             isOneToOne: false
             referencedRelation: "estudantes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_designacoes_estudante_novo_id_fkey"
+            columns: ["estudante_novo_id"]
+            isOneToOne: false
+            referencedRelation: "vw_estudantes_grid"
             referencedColumns: ["id"]
           },
         ]
@@ -410,7 +532,129 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_estudantes_grid: {
+        Row: {
+          ativo: boolean | null
+          cargo: Database["public"]["Enums"]["privilegio"] | null
+          chairman: boolean | null
+          coabitacao: boolean | null
+          created_at: string | null
+          data_batismo: string | null
+          data_nascimento: string | null
+          email: string | null
+          estado_civil: string | null
+          explaining: boolean | null
+          familia: string | null
+          familia_id: string | null
+          family_id: string | null
+          following: boolean | null
+          gems: boolean | null
+          genero: Database["public"]["Enums"]["genero"] | null
+          id: string | null
+          id_conjuge: string | null
+          id_mae: string | null
+          id_pai: string | null
+          idade: number | null
+          making: boolean | null
+          menor: boolean | null
+          nome: string | null
+          observacoes: string | null
+          papel_familiar: string | null
+          pray: boolean | null
+          privilegio: Database["public"]["Enums"]["privilegio"] | null
+          reading: boolean | null
+          responsavel_primario: string | null
+          responsavel_secundario: string | null
+          sobrenome: string | null
+          starting: boolean | null
+          talk: boolean | null
+          telefone: string | null
+          treasures: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cargo?: Database["public"]["Enums"]["privilegio"] | null
+          chairman?: boolean | null
+          coabitacao?: boolean | null
+          created_at?: string | null
+          data_batismo?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          estado_civil?: string | null
+          explaining?: boolean | null
+          familia?: string | null
+          familia_id?: string | null
+          family_id?: string | null
+          following?: boolean | null
+          gems?: boolean | null
+          genero?: Database["public"]["Enums"]["genero"] | null
+          id?: string | null
+          id_conjuge?: string | null
+          id_mae?: string | null
+          id_pai?: string | null
+          idade?: number | null
+          making?: boolean | null
+          menor?: boolean | null
+          nome?: string | null
+          observacoes?: string | null
+          papel_familiar?: string | null
+          pray?: boolean | null
+          privilegio?: Database["public"]["Enums"]["privilegio"] | null
+          reading?: boolean | null
+          responsavel_primario?: string | null
+          responsavel_secundario?: string | null
+          sobrenome?: string | null
+          starting?: boolean | null
+          talk?: boolean | null
+          telefone?: string | null
+          treasures?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cargo?: Database["public"]["Enums"]["privilegio"] | null
+          chairman?: boolean | null
+          coabitacao?: boolean | null
+          created_at?: string | null
+          data_batismo?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          estado_civil?: string | null
+          explaining?: boolean | null
+          familia?: string | null
+          familia_id?: string | null
+          family_id?: string | null
+          following?: boolean | null
+          gems?: boolean | null
+          genero?: Database["public"]["Enums"]["genero"] | null
+          id?: string | null
+          id_conjuge?: string | null
+          id_mae?: string | null
+          id_pai?: string | null
+          idade?: number | null
+          making?: boolean | null
+          menor?: boolean | null
+          nome?: string | null
+          observacoes?: string | null
+          papel_familiar?: string | null
+          pray?: boolean | null
+          privilegio?: Database["public"]["Enums"]["privilegio"] | null
+          reading?: boolean | null
+          responsavel_primario?: string | null
+          responsavel_secundario?: string | null
+          sobrenome?: string | null
+          starting?: boolean | null
+          talk?: boolean | null
+          telefone?: string | null
+          treasures?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
