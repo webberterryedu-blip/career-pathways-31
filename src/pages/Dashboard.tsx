@@ -181,21 +181,26 @@ const Dashboard = () => {
             <CardContent>
               {stats.upcomingAssignments > 0 ? (
                 <div className="space-y-3">
-                  {/* Mock upcoming assignments - in real implementation, this would come from context */}
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Leitura da Bíblia</p>
-                      <p className="text-sm text-gray-600">João Silva - 12/12/2024</p>
-                    </div>
-                    <Badge variant="outline">4 min</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Iniciando Conversas</p>
-                      <p className="text-sm text-gray-600">Maria Santos - 12/12/2024</p>
-                    </div>
-                    <Badge variant="outline">3 min</Badge>
-                  </div>
+                  {assignments
+                    .filter(a => {
+                      const assignmentDate = new Date(a.weekDate);
+                      const today = new Date();
+                      const twoWeeksFromNow = new Date();
+                      twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+                      return assignmentDate >= today && assignmentDate <= twoWeeksFromNow;
+                    })
+                    .slice(0, 3)
+                    .map((assignment, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{assignment.partTitle}</p>
+                          <p className="text-sm text-gray-600">
+                            {assignment.studentName} - {new Date(assignment.weekDate).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                        <Badge variant="outline">{assignment.duration || 5} min</Badge>
+                      </div>
+                    ))}
                   <Button variant="outline" size="sm" onClick={() => navigate('/designacoes')}>
                     Ver todas as designações
                   </Button>
@@ -235,7 +240,16 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Qualificados para Discursos</span>
                   <Badge variant="outline">
-                    {Math.floor(stats.estudantesAtivos * 0.6)} {/* Mock calculation */}
+                    {estudantes?.filter((e: any) => e.talk && e.ativo).length || 0}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Com Qualificações</span>
+                  <Badge variant="outline">
+                    {estudantes?.filter((e: any) => 
+                      e.ativo && (e.chairman || e.pray || e.treasures || e.reading || 
+                      e.starting || e.following || e.making || e.talk)
+                    ).length || 0}
                   </Badge>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => navigate('/estudantes')}>
