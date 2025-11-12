@@ -23,6 +23,7 @@ import { useAssignmentContext } from "@/contexts/AssignmentContext";
 import { useStudentContext } from "@/contexts/StudentContext";
 import { useProgramContext } from "@/contexts/ProgramContext";
 import { ProgramSelector } from "@/components/common/ProgramSelector";
+import { useAssignmentGeneration } from "@/hooks/useAssignmentGeneration";
 
 const DesignacoesPage = () => {
   const navigate = useNavigate();
@@ -47,6 +48,14 @@ const DesignacoesPage = () => {
     getActiveStudents,
     getQualifiedStudents
   } = useStudentContext();
+
+  // Use S-38 assignment generation hook
+  const { 
+    generateAssignments: generateAssignmentsWithS38,
+    isGenerating: isS38Generating,
+    error: s38Error,
+    lastResult: s38LastResult
+  } = useAssignmentGeneration();
 
   const activeStudents = getActiveStudents();
 
@@ -82,20 +91,59 @@ const DesignacoesPage = () => {
     try {
       toast({
         title: "Gerando Designações",
-        description: "O sistema está criando as designações automaticamente...",
+        description: "O sistema está criando as designações automaticamente seguindo as regras S-38...",
       });
       
-      // This would call the assignment generation logic
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Call the real S-38 assignment generation
+      const result = await generateAssignmentsWithS38(activeProgram.id);
       
-      toast({
-        title: "Designações Geradas!",
-        description: "As designações foram criadas com sucesso.",
-      });
+      if (!result) {
+        throw new Error('Falha ao gerar designações');
+      }
+
+      if (!result.sucesso) {
+        toast({
+          title: "Designações Geradas com Avisos",
+          description: `${result.designacoes.length} designações criadas. ${result.erros.length} erros encontrados.`,
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "✅ Designações Geradas com Sucesso!",
+          description: `${result.designacoes.length} designações criadas seguindo as regras S-38.`,
+        });
+      }
+
+      // Show detailed statistics
+      if (result.estatisticas) {
+        setTimeout(() => {
+          toast({
+            title: "📊 Estatísticas da Geração",
+            description: `
+              Total: ${result.estatisticas.totalDesignacoes} designações
+              Masculino: ${result.estatisticas.distribuicaoPorGenero.masculino}
+              Feminino: ${result.estatisticas.distribuicaoPorGenero.feminino}
+              Com Ajudante: ${result.estatisticas.estudantesComAjudante}
+            `,
+          });
+        }, 2000);
+      }
+
+      // Show any errors or warnings
+      if (result.erros.length > 0) {
+        setTimeout(() => {
+          toast({
+            title: "⚠️ Avisos",
+            description: result.erros.slice(0, 3).join('\n'),
+            variant: "destructive"
+          });
+        }, 4000);
+      }
+      
     } catch (error) {
       toast({
         title: "Erro ao gerar designações",
-        description: "Não foi possível gerar as designações. Tente novamente.",
+        description: error instanceof Error ? error.message : "Não foi possível gerar as designações. Tente novamente.",
         variant: "destructive"
       });
     } finally {

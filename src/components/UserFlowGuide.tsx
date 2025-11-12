@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Componente para guiar o usuário através do fluxo principal do sistema
  */

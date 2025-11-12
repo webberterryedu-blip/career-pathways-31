@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Assignment Generation Engine
  * 

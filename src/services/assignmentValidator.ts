@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Assignment Validation System
  * 

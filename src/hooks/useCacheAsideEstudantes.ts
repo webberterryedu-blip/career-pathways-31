@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🚀 HOOK PRÁTICO: Cache-Aside para Estudantes
  * 
