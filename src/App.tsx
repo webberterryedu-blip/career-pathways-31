@@ -23,6 +23,7 @@ import { initializeDebugUtils } from "@/utils/debugOffline";
 import { initializeAuthDebugUtils } from "@/utils/debugAuth";
 import { DevBypassNotification } from "@/components/DevBypassNotification";
 import { DevBypassRedirect } from "@/components/DevBypassRedirect";
+import { DiagnosticPanel } from "@/components/dev/DiagnosticPanel";
 
 // Eager load critical components
 // import Index from "./pages/Index";
@@ -159,6 +160,7 @@ const App = () => {
                         <TooltipProvider>
                           <Sonner />
                           <TutorialOverlay />
+                          <DiagnosticPanel />
                           {!(typeof window !== 'undefined' && window.location.pathname === '/auth') && <DevBypassNotification />}
                           <BrowserRouter
                             future={{
