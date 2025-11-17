@@ -9,8 +9,9 @@ const VITE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 const VITE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID as string | undefined;
 
 const FALLBACK_PROJECT_ID = 'dbcsygvthzkdujeugzca';
+const FALLBACK_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiY3N5Z3Z0aHprZHVqZXVnemNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NzAwOTUsImV4cCI6MjA3ODE0NjA5NX0.cDORDUihudFD2xy1IIny4IEQ-nyH0vKTYLmMRJoIhP0';
 const SUPABASE_URL = VITE_URL || `https://${(VITE_PROJECT_ID || FALLBACK_PROJECT_ID)}.supabase.co`;
-const SUPABASE_KEY = VITE_PUBLISHABLE || VITE_ANON;
+const SUPABASE_KEY = VITE_PUBLISHABLE || VITE_ANON || FALLBACK_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   // Surface a clear diagnostic once, instead of a cryptic runtime error
