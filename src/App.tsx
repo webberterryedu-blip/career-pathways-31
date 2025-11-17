@@ -265,6 +265,14 @@ const App = () => {
                                       } 
                                     />
                                     <Route 
+                                      path="designacoes/preview/:programId" 
+                                      element={
+                                        <Suspense fallback={<RouteLoader />}>
+                                          {React.createElement(lazy(() => import("./pages/DesignacoesPreview")))}
+                                        </Suspense>
+                                      } 
+                                    />
+                                    <Route 
                                       path="treasures-designacoes" 
                                       element={
                                         <Suspense fallback={<RouteLoader />}>

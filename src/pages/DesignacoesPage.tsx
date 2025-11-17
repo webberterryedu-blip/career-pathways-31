@@ -139,6 +139,11 @@ const DesignacoesPage = () => {
           });
         }, 4000);
       }
+
+      // Redirect to preview page after generation
+      setTimeout(() => {
+        navigate(`/designacoes/preview/${activeProgram.id}`);
+      }, 5000);
       
     } catch (error) {
       toast({
