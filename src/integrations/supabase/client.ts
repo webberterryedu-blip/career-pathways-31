@@ -2,13 +2,30 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// Prefer publish-time Vite envs; provide safe fallbacks to prevent runtime crashes
+const VITE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const VITE_PUBLISHABLE = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+const VITE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const VITE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID as string | undefined;
+
+const FALLBACK_PROJECT_ID = 'dbcsygvthzkdujeugzca';
+const SUPABASE_URL = VITE_URL || `https://${(VITE_PROJECT_ID || FALLBACK_PROJECT_ID)}.supabase.co`;
+const SUPABASE_KEY = VITE_PUBLISHABLE || VITE_ANON;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  // Surface a clear diagnostic once, instead of a cryptic runtime error
+  console.error('[Supabase] Missing configuration', {
+    hasUrl: !!SUPABASE_URL,
+    hasKey: !!SUPABASE_KEY,
+    urlEnv: 'VITE_SUPABASE_URL',
+    keyEnvTried: ['VITE_SUPABASE_PUBLISHABLE_KEY', 'VITE_SUPABASE_ANON_KEY']
+  });
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database>(SUPABASE_URL as string, SUPABASE_KEY as string, {
   auth: {
     storage: localStorage,
     persistSession: true,
