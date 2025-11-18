@@ -22,6 +22,8 @@ const AuthPage: React.FC = () => {
   const [signupPassword, setSignupPassword] = useState("");
   const [signupName, setSignupName] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   
   const [submitting, setSubmitting] = useState(false);
 
@@ -125,38 +127,46 @@ const AuthPage: React.FC = () => {
     } else {
       toast({
         title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar o cadastro.",
+        description: "Você já pode fazer login.",
       });
-      // Redirect to login tab or dashboard
-      navigate("/dashboard");
+      // Clear signup form
+      setSignupEmail("");
+      setSignupPassword("");
+      setSignupName("");
+      setSignupConfirmPassword("");
     }
   };
 
-  const handlePasswordReset = async () => {
-    if (!loginEmail.trim()) {
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetEmail.trim()) {
       toast({
-        title: "Email necessário",
-        description: "Digite seu email no campo acima para resetar a senha.",
+        title: "Email obrigatório",
+        description: "Digite seu email para recuperar a senha.",
         variant: "destructive"
       });
       return;
     }
 
+    setSubmitting(true);
     const { supabase } = await import("@/integrations/supabase/client");
-    const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
-      redirectTo: `${window.location.origin}/`
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
     });
+    setSubmitting(false);
 
     if (error) {
       toast({
         title: "Erro ao enviar email",
-        description: error.message,
+        description: "Verifique o email digitado e tente novamente.",
         variant: "destructive"
       });
     } else {
+      setResetEmailSent(true);
       toast({
         title: "Email enviado!",
-        description: "Verifique sua caixa de entrada para resetar sua senha.",
+        description: "Verifique sua caixa de entrada para redefinir sua senha.",
       });
     }
   };
@@ -171,10 +181,11 @@ const AuthPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="signup">Criar Conta</TabsTrigger>
-            </TabsList>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="login">Entrar</TabsTrigger>
+          <TabsTrigger value="signup">Criar Conta</TabsTrigger>
+          <TabsTrigger value="forgot">Recuperar Senha</TabsTrigger>
+        </TabsList>
 
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
@@ -217,7 +228,10 @@ const AuthPage: React.FC = () => {
                   type="button"
                   variant="link"
                   className="w-full text-sm"
-                  onClick={handlePasswordReset}
+                  onClick={() => {
+                    const forgotTab = document.querySelector('[value="forgot"]') as HTMLElement;
+                    forgotTab?.click();
+                  }}
                 >
                   Esqueci minha senha
                 </Button>
@@ -285,6 +299,62 @@ const AuthPage: React.FC = () => {
                   {submitting ? "Criando conta..." : "Criar Conta"}
                 </Button>
               </form>
+            </TabsContent>
+
+            <TabsContent value="forgot">
+              {resetEmailSent ? (
+                <div className="text-center py-8 space-y-4">
+                  <div className="text-6xl mb-4">✉️</div>
+                  <p className="text-lg font-medium">Email enviado!</p>
+                  <p className="text-muted-foreground">
+                    Verifique sua caixa de entrada e clique no link para redefinir sua senha.
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      setResetEmailSent(false);
+                      setResetEmail("");
+                    }}
+                    variant="outline"
+                    className="mt-4"
+                  >
+                    Voltar
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      disabled={submitting}
+                      autoComplete="email"
+                      required
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={submitting || loading}
+                  >
+                    {submitting ? "Enviando..." : "Enviar Link de Recuperação"}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    className="w-full"
+                    onClick={() => {
+                      const loginTab = document.querySelector('[value="login"]') as HTMLElement;
+                      loginTab?.click();
+                    }}
+                  >
+                    Voltar para Login
+                  </Button>
+                </form>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
