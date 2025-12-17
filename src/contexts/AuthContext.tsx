@@ -301,16 +301,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (profileData && typeof profileData === 'object' && profileData !== null && 'id' in profileData) {
           if (import.meta.env.DEV) console.log('Profile loaded successfully:', profileData);
+          
+          // Fetch role from user_roles table using get_user_role function
+          let userRole: 'admin' | 'instrutor' | 'estudante' = 'estudante';
+          try {
+            const { data: roleData } = await supabase.rpc('get_user_role', { _user_id: userId });
+            if (roleData && (roleData === 'admin' || roleData === 'instrutor' || roleData === 'estudante')) {
+              userRole = roleData;
+            }
+          } catch (roleError) {
+            console.warn('Could not fetch role from user_roles, using fallback:', roleError);
+            // Fallback to profile.role for backwards compatibility
+            if (profileData.role === 'admin' || profileData.role === 'instrutor' || profileData.role === 'estudante') {
+              userRole = profileData.role;
+            }
+          }
+          
           const updatedProfile: Profile = { 
             id: profileData.id,
             user_id: profileData.user_id || profileData.id,
-            nome: (profileData.nome as string) || (profileData.email as string)?.split('@')[0] || 'Usu�rio',
+            nome: (profileData.nome as string) || (profileData.email as string)?.split('@')[0] || 'Usuário',
             email: (profileData.email as string) || '',
-            role: ((profileData.role === 'admin' || profileData.role === 'instrutor' || profileData.role === 'estudante') 
-              ? profileData.role 
-              : (profileData.cargo === 'admin' || profileData.cargo === 'instrutor') 
-                ? profileData.cargo 
-                : 'estudante') as 'admin' | 'instrutor' | 'estudante',
+            role: userRole,
             congregacao: profileData.congregacao || (profileData as any).congregacao_id || null,
             created_at: (profileData.created_at as string) || null,
             updated_at: (profileData.updated_at as string) || null
@@ -345,16 +357,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (profileData && typeof profileData === 'object' && profileData !== null && 'id' in profileData) {
           if (import.meta.env.DEV) console.log('Profile loaded successfully:', profileData);
+          
+          // Fetch role from user_roles table using get_user_role function
+          let userRole: 'admin' | 'instrutor' | 'estudante' = 'estudante';
+          try {
+            const { data: roleData } = await supabase.rpc('get_user_role', { _user_id: userId });
+            if (roleData && (roleData === 'admin' || roleData === 'instrutor' || roleData === 'estudante')) {
+              userRole = roleData;
+            }
+          } catch (roleError) {
+            console.warn('Could not fetch role from user_roles, using fallback:', roleError);
+            // Fallback to profile.role for backwards compatibility
+            if (profileData.role === 'admin' || profileData.role === 'instrutor' || profileData.role === 'estudante') {
+              userRole = profileData.role;
+            }
+          }
+          
           const updatedProfile: Profile = { 
             id: profileData.id,
             user_id: profileData.user_id || profileData.id,
-            nome: (profileData.nome as string) || (profileData.email as string)?.split('@')[0] || 'Usu�rio',
+            nome: (profileData.nome as string) || (profileData.email as string)?.split('@')[0] || 'Usuário',
             email: (profileData.email as string) || '',
-            role: ((profileData.role === 'admin' || profileData.role === 'instrutor' || profileData.role === 'estudante') 
-              ? profileData.role 
-              : (profileData.cargo === 'admin' || profileData.cargo === 'instrutor') 
-                ? profileData.cargo 
-                : 'estudante') as 'admin' | 'instrutor' | 'estudante',
+            role: userRole,
             congregacao: profileData.congregacao || (profileData as any).congregacao_id || null,
             created_at: (profileData.created_at as string) || null,
             updated_at: (profileData.updated_at as string) || null
