@@ -42,6 +42,7 @@ const DesignacoesPage = lazy(() => import("./pages/DesignacoesPage"));
 const TreasuresAssignmentsPage = lazy(() => import("./pages/TreasuresAssignmentsPage"));
 const AssignmentsPage = lazy(() => import("./pages/AssignmentsPage"));
 const RelatoriosPage = lazy(() => import("./pages/RelatoriosPage"));
+const AdminUsuarios = lazy(() => import("./pages/AdminUsuarios"));
 const UnifiedDashboard = lazy(() => import("./components/UnifiedDashboard"));
 
 // Lazy load secondary pages
@@ -305,6 +306,16 @@ const App = () => {
                                       element={
                                         <Suspense fallback={<RouteLoader />}>
                                           <Reunioes />
+                                        </Suspense>
+                                      } 
+                                    />
+
+                                    {/* Admin Routes */}
+                                    <Route 
+                                      path="admin/usuarios" 
+                                      element={
+                                        <Suspense fallback={<RouteLoader />}>
+                                          <AdminUsuarios />
                                         </Suspense>
                                       } 
                                     />
