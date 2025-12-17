@@ -12,7 +12,8 @@ import {
   TrendingUp,
   Menu,
   X,
-  Plus
+  Plus,
+  Settings
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import UnifiedNotifications from './UnifiedNotifications';
@@ -105,7 +106,8 @@ export default function UnifiedNavigation() {
         }
       },
       { href: '/relatorios', label: 'Relatórios', icon: BarChart3, status: 'completed' },
-      { href: '/reunioes', label: 'Reuniões', icon: Calendar, status: 'active' }
+      { href: '/reunioes', label: 'Reuniões', icon: Calendar, status: 'active' },
+      { href: '/admin/usuarios', label: 'Gerenciar Usuários', icon: Settings, status: 'active' }
     ];
 
     return <NavigationBar items={instructorNavItems} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />;
