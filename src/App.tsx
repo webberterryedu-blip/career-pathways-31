@@ -28,6 +28,7 @@ import { DiagnosticPanel } from "@/components/dev/DiagnosticPanel";
 // Eager load critical components
 // import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthRecoveryButton from "./components/AuthRecoveryButton";
@@ -183,6 +184,7 @@ const App = () => {
                         <Auth />
                       </DevBypassRedirect>
                     } />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/demo" element={<Demo />} />
                     <Route path="/funcionalidades" element={<Funcionalidades />} />
                     <Route path="/congregacoes" element={<Congregacoes />} />
