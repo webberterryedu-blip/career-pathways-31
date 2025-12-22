@@ -181,11 +181,10 @@ const AuthPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="login">Entrar</TabsTrigger>
-          <TabsTrigger value="signup">Criar Conta</TabsTrigger>
-          <TabsTrigger value="forgot">Recuperar Senha</TabsTrigger>
-        </TabsList>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Entrar</TabsTrigger>
+              <TabsTrigger value="signup">Criar Conta</TabsTrigger>
+            </TabsList>
 
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
@@ -313,15 +312,20 @@ const AuthPage: React.FC = () => {
                     onClick={() => {
                       setResetEmailSent(false);
                       setResetEmail("");
+                      const loginTab = document.querySelector('[value="login"]') as HTMLElement;
+                      loginTab?.click();
                     }}
                     variant="outline"
                     className="mt-4"
                   >
-                    Voltar
+                    Voltar ao Login
                   </Button>
                 </div>
               ) : (
                 <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Digite seu email e enviaremos um link para redefinir sua senha.
+                  </p>
                   <div className="space-y-2">
                     <Label htmlFor="reset-email">Email</Label>
                     <Input
@@ -344,14 +348,14 @@ const AuthPage: React.FC = () => {
                   </Button>
                   <Button 
                     type="button" 
-                    variant="link" 
+                    variant="ghost" 
                     className="w-full"
                     onClick={() => {
                       const loginTab = document.querySelector('[value="login"]') as HTMLElement;
                       loginTab?.click();
                     }}
                   >
-                    Voltar para Login
+                    Voltar ao Login
                   </Button>
                 </form>
               )}
