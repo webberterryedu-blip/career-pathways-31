@@ -4,12 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Shield, Users, Search, RefreshCw, UserCog } from 'lucide-react';
+import { Shield, Users, Search, RefreshCw, UserCog, UserPlus, Loader2 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
+import { z } from 'zod';
 
 interface UserWithRole {
   id: string;
@@ -31,12 +34,30 @@ const roleBadgeVariants: Record<string, 'default' | 'secondary' | 'outline'> = {
   estudante: 'outline',
 };
 
+const createUserSchema = z.object({
+  email: z.string().email('Email inválido').max(255, 'Email muito longo'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres').max(72, 'Senha muito longa'),
+  nome: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome muito longo'),
+  role: z.enum(['admin', 'instrutor', 'estudante'])
+});
+
+type CreateUserData = z.infer<typeof createUserSchema>;
+
 export default function AdminUsuarios() {
   const { profile, isAdmin } = useAuth();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [formData, setFormData] = useState<CreateUserData>({
+    email: '',
+    password: '',
+    nome: '',
+    role: 'instrutor'
+  });
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof CreateUserData, string>>>({});
 
   // Redirect non-admins
   if (!isAdmin) {
@@ -82,6 +103,87 @@ export default function AdminUsuarios() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const validateForm = (): boolean => {
+    try {
+      createUserSchema.parse(formData);
+      setFormErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors: Partial<Record<keyof CreateUserData, string>> = {};
+        error.errors.forEach(err => {
+          if (err.path[0]) {
+            errors[err.path[0] as keyof CreateUserData] = err.message;
+          }
+        });
+        setFormErrors(errors);
+      }
+      return false;
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!validateForm()) return;
+
+    setIsCreating(true);
+    try {
+      // Create user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            nome: formData.nome
+          }
+        }
+      });
+
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          toast.error('Este email já está cadastrado');
+        } else {
+          toast.error(`Erro ao criar usuário: ${authError.message}`);
+        }
+        return;
+      }
+
+      if (!authData.user) {
+        toast.error('Erro ao criar usuário');
+        return;
+      }
+
+      // Update the role if different from default (instrutor)
+      if (formData.role !== 'instrutor') {
+        // Wait a moment for the trigger to create the default role
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .update({ role: formData.role })
+          .eq('user_id', authData.user.id);
+
+        if (roleError) {
+          console.error('Error updating role:', roleError);
+          toast.warning('Usuário criado, mas houve erro ao definir a role');
+        }
+      }
+
+      toast.success('Usuário criado com sucesso!');
+      setIsCreateDialogOpen(false);
+      setFormData({ email: '', password: '', nome: '', role: 'instrutor' });
+      setFormErrors({});
+      
+      // Refresh user list
+      setTimeout(() => fetchUsers(), 1000);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      toast.error('Erro ao criar usuário');
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   const updateUserRole = async (userId: string, newRole: 'admin' | 'instrutor' | 'estudante') => {
     if (userId === profile?.id) {
@@ -148,10 +250,96 @@ export default function AdminUsuarios() {
             Administre os roles e permissões dos usuários do sistema
           </p>
         </div>
-        <Button onClick={fetchUsers} variant="outline" disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
+        <div className="flex gap-2">
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Novo Usuário
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Criar Novo Usuário</DialogTitle>
+                <DialogDescription>
+                  Preencha os dados para criar um novo usuário no sistema.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="nome">Nome</Label>
+                  <Input
+                    id="nome"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    placeholder="Nome completo"
+                  />
+                  {formErrors.nome && (
+                    <p className="text-sm text-destructive">{formErrors.nome}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="email@exemplo.com"
+                  />
+                  {formErrors.email && (
+                    <p className="text-sm text-destructive">{formErrors.email}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Mínimo 6 caracteres"
+                  />
+                  {formErrors.password && (
+                    <p className="text-sm text-destructive">{formErrors.password}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) => setFormData({ ...formData, role: value as CreateUserData['role'] })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="estudante">Estudante</SelectItem>
+                      <SelectItem value="instrutor">Instrutor</SelectItem>
+                      <SelectItem value="admin">Administrador</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formErrors.role && (
+                    <p className="text-sm text-destructive">{formErrors.role}</p>
+                  )}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleCreateUser} disabled={isCreating}>
+                  {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Criar Usuário
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Button onClick={fetchUsers} variant="outline" disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
