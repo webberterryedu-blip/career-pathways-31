@@ -548,6 +548,90 @@ export type Database = {
         }
         Relationships: []
       }
+      programas_oficiais: {
+        Row: {
+          cantico_final: number | null
+          cantico_inicial: number | null
+          cantico_meio: number | null
+          created_at: string | null
+          fonte_url: string | null
+          id: string
+          idioma: string
+          leitura_biblica: string | null
+          mes_ano: string
+          partes: Json
+          semana_fim: string
+          semana_inicio: string
+          tema: string | null
+          ultima_sincronizacao: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cantico_final?: number | null
+          cantico_inicial?: number | null
+          cantico_meio?: number | null
+          created_at?: string | null
+          fonte_url?: string | null
+          id?: string
+          idioma?: string
+          leitura_biblica?: string | null
+          mes_ano: string
+          partes?: Json
+          semana_fim: string
+          semana_inicio: string
+          tema?: string | null
+          ultima_sincronizacao?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cantico_final?: number | null
+          cantico_inicial?: number | null
+          cantico_meio?: number | null
+          created_at?: string | null
+          fonte_url?: string | null
+          id?: string
+          idioma?: string
+          leitura_biblica?: string | null
+          mes_ano?: string
+          partes?: Json
+          semana_fim?: string
+          semana_inicio?: string
+          tema?: string | null
+          ultima_sincronizacao?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      sincronizacoes_jworg: {
+        Row: {
+          created_at: string | null
+          erro_mensagem: string | null
+          id: string
+          idioma: string
+          mes_ano: string | null
+          programas_importados: number | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          idioma: string
+          mes_ano?: string | null
+          programas_importados?: number | null
+          status: string
+        }
+        Update: {
+          created_at?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          idioma?: string
+          mes_ano?: string | null
+          programas_importados?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
       tipos_parte: {
         Row: {
           codigo: string
