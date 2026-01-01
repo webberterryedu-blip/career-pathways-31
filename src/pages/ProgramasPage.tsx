@@ -18,12 +18,14 @@ import {
   Download,
   Link,
   Settings,
-  Play
+  Play,
+  Globe
 } from "lucide-react";
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import { useNavigate } from "react-router-dom";
 import { useProgramContext } from "@/contexts/ProgramContext";
 import { supabase } from "@/integrations/supabase/client";
+import { SincronizacaoJWorgCard } from "@/components/SincronizacaoJWorgCard";
 
 async function fetchMockMonth(month: string) {
   const resp = await fetch(`/api/programacoes/mock?mes=${encodeURIComponent(month)}`);
@@ -454,10 +456,14 @@ const ProgramasPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="list" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Lista de Semanas
+          </TabsTrigger>
+          <TabsTrigger value="jworg" className="flex items-center gap-2">
+            <Globe className="w-4 h-4" />
+            JW.org
           </TabsTrigger>
           <TabsTrigger value="import" className="flex items-center gap-2">
             <Upload className="w-4 h-4" />
@@ -562,6 +568,10 @@ const ProgramasPage = () => {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="jworg" className="space-y-6">
+          <SincronizacaoJWorgCard />
         </TabsContent>
 
         <TabsContent value="import" className="space-y-6">
