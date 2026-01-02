@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { jworgApi, type SincronizacaoLog, type ProgramaOficial } from '@/lib/api/jworg';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ImportacaoManualDialog } from './ImportacaoManualDialog';
 
 export function SincronizacaoJWorgCard() {
   const { toast } = useToast();
@@ -126,10 +127,12 @@ export function SincronizacaoJWorgCard() {
               ) : (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Sincronizar Agora
-                </>
-              )}
+                Sincronizar Agora
+              </>
+            )}
             </Button>
+
+            <ImportacaoManualDialog onSuccess={loadData} />
             
             <a 
               href="https://www.jw.org/pt/biblioteca/jw-apostila-do-mes/" 
