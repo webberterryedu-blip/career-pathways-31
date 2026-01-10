@@ -1,18 +1,21 @@
 /**
  * Parser for manually pasted workbook (apostila) text content
  * Extracts program data from copy/pasted text from JW.org or PDF
+ * Supports parsing multiple weeks at once
  */
 
-interface ParteParsed {
+export interface ParteParsed {
   ordem: number;
   titulo: string;
   duracao_min: number;
   tipo: string;
   secao: 'tesouros' | 'ministerio' | 'vida_crista';
   referencia?: string;
+  requer_assistente?: boolean;
+  genero_requerido?: 'masculino' | 'feminino';
 }
 
-interface ProgramaParsed {
+export interface SemanaParsed {
   semana_inicio: string;
   semana_fim: string;
   mes_ano: string;
@@ -22,6 +25,13 @@ interface ProgramaParsed {
   cantico_meio: number;
   cantico_final: number;
   partes: ParteParsed[];
+}
+
+export interface ParseResult {
+  success: boolean;
+  semanas: SemanaParsed[];
+  erros: string[];
+  avisos: string[];
 }
 
 // Map of months in Portuguese
@@ -107,31 +117,49 @@ function extractSongs(text: string): number[] {
 /**
  * Determine the type of a part based on its title and section
  */
-function determineTipo(titulo: string, secao: string): string {
+function determineTipo(titulo: string, secao: string): { tipo: string; requer_assistente: boolean; genero_requerido?: 'masculino' | 'feminino' } {
   const tituloLower = titulo.toLowerCase();
 
   if (secao === 'tesouros') {
-    if (tituloLower.includes('joias') || tituloLower.includes('gems')) return 'joias_espirituais';
-    if (tituloLower.includes('leitura') && tituloLower.includes('bíblia')) return 'leitura_biblia';
-    return 'discurso_tesouros';
+    if (tituloLower.includes('joias') || tituloLower.includes('gems')) {
+      return { tipo: 'joias_espirituais', requer_assistente: false, genero_requerido: 'masculino' };
+    }
+    if (tituloLower.includes('leitura') && tituloLower.includes('bíblia')) {
+      return { tipo: 'leitura_biblia', requer_assistente: false, genero_requerido: 'masculino' };
+    }
+    return { tipo: 'discurso_tesouros', requer_assistente: false, genero_requerido: 'masculino' };
   }
 
   if (secao === 'ministerio') {
-    if (tituloLower.includes('primeira conversa') || tituloLower.includes('iniciando')) return 'primeira_conversa';
-    if (tituloLower.includes('revisita') || tituloLower.includes('cultivando')) return 'revisita';
-    if (tituloLower.includes('estudo bíblico') && !tituloLower.includes('congregação')) return 'estudo_biblico';
-    if (tituloLower.includes('discurso')) return 'discurso_estudante';
-    return 'parte_ministerio';
+    if (tituloLower.includes('primeira conversa') || tituloLower.includes('iniciando')) {
+      return { tipo: 'primeira_conversa', requer_assistente: true };
+    }
+    if (tituloLower.includes('revisita') || tituloLower.includes('cultivando')) {
+      return { tipo: 'revisita', requer_assistente: true };
+    }
+    if (tituloLower.includes('estudo bíblico') && !tituloLower.includes('congregação')) {
+      return { tipo: 'estudo_biblico', requer_assistente: true };
+    }
+    if (tituloLower.includes('discurso')) {
+      return { tipo: 'discurso_estudante', requer_assistente: false, genero_requerido: 'masculino' };
+    }
+    return { tipo: 'parte_ministerio', requer_assistente: false };
   }
 
   if (secao === 'vida_crista') {
-    if (tituloLower.includes('estudo bíblico de congregação') || tituloLower.includes('estudo de')) return 'estudo_congregacao';
-    if (tituloLower.includes('necessidades')) return 'necessidades_congregacao';
-    if (tituloLower.includes('comentários finais')) return 'comentarios_finais';
-    return 'parte_vida_crista';
+    if (tituloLower.includes('estudo bíblico de congregação') || tituloLower.includes('estudo de')) {
+      return { tipo: 'estudo_congregacao', requer_assistente: false, genero_requerido: 'masculino' };
+    }
+    if (tituloLower.includes('necessidades')) {
+      return { tipo: 'necessidades_congregacao', requer_assistente: false, genero_requerido: 'masculino' };
+    }
+    if (tituloLower.includes('comentários finais')) {
+      return { tipo: 'comentarios_finais', requer_assistente: false, genero_requerido: 'masculino' };
+    }
+    return { tipo: 'parte_vida_crista', requer_assistente: false };
   }
 
-  return 'outro';
+  return { tipo: 'outro', requer_assistente: false };
 }
 
 /**
@@ -211,7 +239,7 @@ function parsePartes(content: string): ParteParsed[] {
       foundParts.add(key);
 
       const secao = getSecaoAtPosition(match.index || 0);
-      const tipo = determineTipo(titulo, secao);
+      const tipoInfo = determineTipo(titulo, secao);
 
       // Extract reference if present in parentheses at end
       let referencia: string | undefined;
@@ -225,9 +253,9 @@ function parsePartes(content: string): ParteParsed[] {
         ordem: ordem++,
         titulo,
         duracao_min: duracao,
-        tipo,
         secao,
-        referencia
+        referencia,
+        ...tipoInfo
       });
     }
   }
@@ -248,9 +276,37 @@ function parsePartes(content: string): ParteParsed[] {
 }
 
 /**
- * Main parser function - parses pasted text and returns program data
+ * Split text into week blocks
  */
-export function parseApostilaText(text: string): ProgramaParsed | null {
+function splitIntoWeeks(text: string): string[] {
+  // Pattern to identify week headers
+  const weekPattern = /(\d{1,2})[-–]\s*(\d{1,2})\s+(?:DE\s+)?([A-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÜÇ]+)/gi;
+  
+  const matches: { index: number; match: string }[] = [];
+  let match;
+  
+  while ((match = weekPattern.exec(text)) !== null) {
+    matches.push({ index: match.index, match: match[0] });
+  }
+  
+  if (matches.length === 0) {
+    return [text];
+  }
+  
+  const blocks: string[] = [];
+  for (let i = 0; i < matches.length; i++) {
+    const start = matches[i].index;
+    const end = i < matches.length - 1 ? matches[i + 1].index : text.length;
+    blocks.push(text.slice(start, end));
+  }
+  
+  return blocks;
+}
+
+/**
+ * Parse a single week block
+ */
+function parseSingleWeek(text: string): SemanaParsed | null {
   if (!text || text.trim().length < 50) {
     return null;
   }
@@ -258,7 +314,6 @@ export function parseApostilaText(text: string): ProgramaParsed | null {
   // Parse date range
   const dateInfo = parseDateRange(text);
   if (!dateInfo) {
-    console.error('Could not parse date from text');
     return null;
   }
 
@@ -312,9 +367,95 @@ export function parseApostilaText(text: string): ProgramaParsed | null {
 }
 
 /**
+ * Main parser function - parses pasted text and returns multiple weeks
+ */
+export function parseApostilaText(text: string): ParseResult {
+  const result: ParseResult = {
+    success: false,
+    semanas: [],
+    erros: [],
+    avisos: []
+  };
+
+  if (!text || text.trim().length < 50) {
+    result.erros.push('Texto muito curto ou vazio');
+    return result;
+  }
+
+  try {
+    const weekBlocks = splitIntoWeeks(text);
+    
+    for (const block of weekBlocks) {
+      const semana = parseSingleWeek(block);
+      
+      if (semana) {
+        result.semanas.push(semana);
+        
+        // Add warnings for incomplete data
+        if (semana.partes.length < 3) {
+          result.avisos.push(`Semana ${semana.semana_inicio}: poucas partes identificadas (${semana.partes.length})`);
+        }
+        if (!semana.cantico_inicial && !semana.cantico_meio && !semana.cantico_final) {
+          result.avisos.push(`Semana ${semana.semana_inicio}: cânticos não identificados`);
+        }
+      } else {
+        result.avisos.push('Um bloco de texto não pôde ser processado');
+      }
+    }
+    
+    result.success = result.semanas.length > 0;
+    
+    if (!result.success) {
+      result.erros.push('Nenhuma semana válida foi extraída do texto');
+    }
+  } catch (error) {
+    result.erros.push(`Erro durante o parsing: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+  }
+
+  return result;
+}
+
+/**
  * Validate parsed program data
  */
-export function validateParsedProgram(programa: ProgramaParsed | null): { valid: boolean; errors: string[] } {
+export function validarParsing(result: ParseResult): { valido: boolean; problemas: string[] } {
+  const problemas: string[] = [];
+
+  if (!result.success) {
+    problemas.push(...result.erros);
+    return { valido: false, problemas };
+  }
+
+  for (const semana of result.semanas) {
+    if (semana.partes.length === 0) {
+      problemas.push(`Semana ${semana.semana_inicio}: nenhuma parte identificada`);
+    }
+
+    // Check if all sections are present
+    const secoes = new Set(semana.partes.map(p => p.secao));
+    if (!secoes.has('tesouros')) {
+      problemas.push(`Semana ${semana.semana_inicio}: seção Tesouros não encontrada`);
+    }
+    if (!secoes.has('ministerio')) {
+      problemas.push(`Semana ${semana.semana_inicio}: seção Ministério não encontrada`);
+    }
+    if (!secoes.has('vida_crista')) {
+      problemas.push(`Semana ${semana.semana_inicio}: seção Vida Cristã não encontrada`);
+    }
+  }
+
+  return {
+    valido: problemas.length === 0,
+    problemas
+  };
+}
+
+// Backwards compatibility - single week parser
+export function parseSingleProgram(text: string): SemanaParsed | null {
+  return parseSingleWeek(text);
+}
+
+export function validateParsedProgram(programa: SemanaParsed | null): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   if (!programa) {
