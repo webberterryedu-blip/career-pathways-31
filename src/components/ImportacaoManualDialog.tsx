@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileText, Upload, Check, AlertTriangle, Eye, EyeOff } from 'lucide-react';
-import { parseApostilaText, validateParsedProgram } from '@/lib/parsers/apostilaTextParser';
+import { parseApostilaText, validarParsing, SemanaParsed } from '@/lib/parsers/apostilaTextParser';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -31,63 +31,73 @@ export function ImportacaoManualDialog({ onSuccess }: ImportacaoManualDialogProp
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Parse the text
-  const parsedProgram = text.trim().length > 50 ? parseApostilaText(text) : null;
-  const validation = validateParsedProgram(parsedProgram);
+  // Parse the text - now returns ParseResult with array of semanas
+  const parseResult = text.trim().length > 50 ? parseApostilaText(text) : null;
+  const validation = validarParsing(parseResult || { success: false, semanas: [], erros: ['Texto vazio'], avisos: [] });
+  
+  // Get first week for single import (backwards compatibility)
+  const parsedProgram: SemanaParsed | null = parseResult?.semanas?.[0] || null;
+  const isValid = parseResult?.success && parsedProgram !== null;
 
   async function handleImport() {
-    if (!parsedProgram) return;
+    if (!parsedProgram || !parseResult) return;
 
     setLoading(true);
     try {
-      // First check if record exists
-      const { data: existing } = await supabase
-        .from('programas_oficiais')
-        .select('id')
-        .eq('semana_inicio', parsedProgram.semana_inicio)
-        .eq('semana_fim', parsedProgram.semana_fim)
-        .eq('idioma', 'pt')
-        .maybeSingle();
-
-      const programData = {
-        semana_inicio: parsedProgram.semana_inicio,
-        semana_fim: parsedProgram.semana_fim,
-        mes_ano: parsedProgram.mes_ano,
-        tema: parsedProgram.tema,
-        leitura_biblica: parsedProgram.leitura_biblica,
-        cantico_inicial: parsedProgram.cantico_inicial,
-        cantico_meio: parsedProgram.cantico_meio,
-        cantico_final: parsedProgram.cantico_final,
-        partes: parsedProgram.partes as unknown as import('@/integrations/supabase/types').Json,
-        idioma: 'pt',
-        fonte_url: 'importacao_manual',
-        ultima_sincronizacao: new Date().toISOString()
-      };
-
-      let error;
-      if (existing?.id) {
-        ({ error } = await supabase
+      let importedCount = 0;
+      
+      // Import all parsed weeks
+      for (const semana of parseResult.semanas) {
+        // First check if record exists
+        const { data: existing } = await supabase
           .from('programas_oficiais')
-          .update(programData)
-          .eq('id', existing.id));
-      } else {
-        ({ error } = await supabase
-          .from('programas_oficiais')
-          .insert(programData));
+          .select('id')
+          .eq('semana_inicio', semana.semana_inicio)
+          .eq('semana_fim', semana.semana_fim)
+          .eq('idioma', 'pt')
+          .maybeSingle();
+
+        const programData = {
+          semana_inicio: semana.semana_inicio,
+          semana_fim: semana.semana_fim,
+          mes_ano: semana.mes_ano,
+          tema: semana.tema,
+          leitura_biblica: semana.leitura_biblica,
+          cantico_inicial: semana.cantico_inicial,
+          cantico_meio: semana.cantico_meio,
+          cantico_final: semana.cantico_final,
+          partes: semana.partes as unknown as import('@/integrations/supabase/types').Json,
+          idioma: 'pt',
+          fonte_url: 'importacao_manual',
+          ultima_sincronizacao: new Date().toISOString()
+        };
+
+        let error;
+        if (existing?.id) {
+          ({ error } = await supabase
+            .from('programas_oficiais')
+            .update(programData)
+            .eq('id', existing.id));
+        } else {
+          ({ error } = await supabase
+            .from('programas_oficiais')
+            .insert(programData));
+        }
+
+        if (error) throw error;
+        importedCount++;
       }
 
-      if (error) throw error;
-
       toast({
-        title: 'Programa importado',
-        description: `Semana de ${format(new Date(parsedProgram.semana_inicio), "d 'de' MMMM", { locale: ptBR })} importada com sucesso`,
+        title: 'Programa(s) importado(s)',
+        description: `${importedCount} semana(s) importada(s) com sucesso`,
       });
 
       // Log the import
       await supabase.from('sincronizacoes_jworg').insert({
         idioma: 'pt',
         status: 'sucesso',
-        programas_importados: 1,
+        programas_importados: importedCount,
         mes_ano: parsedProgram.mes_ano
       });
 
@@ -175,11 +185,11 @@ NOSSA VIDA CRISTÃ
           {/* Validation feedback */}
           {text.trim().length > 0 && (
             <div className="space-y-3">
-              {validation.valid ? (
+              {isValid ? (
                 <Alert className="bg-green-500/10 border-green-500/20">
                   <Check className="h-4 w-4 text-green-500" />
                   <AlertDescription className="text-green-600">
-                    Texto válido! Dados extraídos com sucesso.
+                    Texto válido! {parseResult?.semanas.length || 0} semana(s) extraída(s) com sucesso.
                   </AlertDescription>
                 </Alert>
               ) : (
@@ -187,8 +197,11 @@ NOSSA VIDA CRISTÃ
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
                     <ul className="list-disc list-inside">
-                      {validation.errors.map((error, i) => (
+                      {validation.problemas.map((error, i) => (
                         <li key={i}>{error}</li>
+                      ))}
+                      {parseResult?.erros.map((error, i) => (
+                        <li key={`err-${i}`}>{error}</li>
                       ))}
                     </ul>
                   </AlertDescription>
@@ -278,9 +291,9 @@ NOSSA VIDA CRISTÃ
           </Button>
           <Button
             onClick={handleImport}
-            disabled={!validation.valid || loading}
+            disabled={!isValid || loading}
           >
-            {loading ? 'Importando...' : 'Importar Programa'}
+            {loading ? 'Importando...' : `Importar ${parseResult?.semanas.length || 0} Semana(s)`}
           </Button>
         </DialogFooter>
       </DialogContent>
