@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       assignment_history: {
         Row: {
+          alternatives_considered: number | null
           assignment_duration: number | null
           assignment_title: string
           assignment_type: string
@@ -25,6 +26,7 @@ export type Database = {
           id: string
           meeting_date: string
           observations: string | null
+          selection_reason: string | null
           status: string | null
           student_id: string
           student_name: string
@@ -32,6 +34,7 @@ export type Database = {
           week: string
         }
         Insert: {
+          alternatives_considered?: number | null
           assignment_duration?: number | null
           assignment_title: string
           assignment_type: string
@@ -41,6 +44,7 @@ export type Database = {
           id?: string
           meeting_date: string
           observations?: string | null
+          selection_reason?: string | null
           status?: string | null
           student_id: string
           student_name: string
@@ -48,6 +52,7 @@ export type Database = {
           week: string
         }
         Update: {
+          alternatives_considered?: number | null
           assignment_duration?: number | null
           assignment_title?: string
           assignment_type?: string
@@ -57,6 +62,7 @@ export type Database = {
           id?: string
           meeting_date?: string
           observations?: string | null
+          selection_reason?: string | null
           status?: string | null
           student_id?: string
           student_name?: string

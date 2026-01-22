@@ -27,7 +27,7 @@ const REGRAS_S38 = {
   treasures_talk: {
     genero: 'masculino',
     cargos_permitidos: ['anciao', 'servo_ministerial'],
-    qualificacao_necessaria: 'tresures',
+    qualificacao_necessaria: 'treasures',
     precisa_ajudante: false,
     apenas_batizados: true,
     priorizar_ancioes: true,
@@ -114,29 +114,30 @@ class AlgoritmoDesignacoes {
    * Convert spreadsheet data to algorithm format
    */
   converterDadosPlanilha(dadosPlanilha) {
-    return dadosPlanilha.map((linha, index) => ({
-      id: linha.user_id || `estudante_${index}`,
-      nome: linha.nome,
+    return dadosPlanilha.map((linha) => ({
+      id: linha.id, // Use the actual database ID
+      nome: `${linha.nome} ${linha.sobrenome || ''}`.trim(),
       genero: linha.genero,
-      cargo: linha.cargo,
+      cargo: linha.privilegio || linha.cargo,
       ativo: linha.ativo === true || linha.ativo === 'TRUE',
       menor: linha.menor === true || linha.menor === 'TRUE',
-      familia_id: linha.family_id || linha.familia,
+      familia_id: linha.family_id || linha.familia_id || linha.familia,
       qualificacoes: {
-        chairman: linha.chairman === true || linha.chairman === 'TRUE',
-        pray: linha.pray === true || linha.pray === 'TRUE',
-        tresures: linha.tresures === true || linha.tresures === 'TRUE',
-        gems: linha.gems === true || linha.gems === 'TRUE',
-        reading: linha.reading === true || linha.reading === 'TRUE',
-        starting: linha.starting === true || linha.starting === 'TRUE',
-        following: linha.following === true || linha.following === 'TRUE',
-        making: linha.making === true || linha.making === 'TRUE',
-        explaining: linha.explaining === true || linha.explaining === 'TRUE',
-        talk: linha.talk === true || linha.talk === 'TRUE',
+        chairman: linha.chairman === true,
+        pray: linha.pray === true,
+        treasures: linha.treasures === true,
+        gems: linha.gems === true,
+        reading: linha.reading === true,
+        starting: linha.starting === true,
+        following: linha.following === true,
+        making: linha.making === true,
+        explaining: linha.explaining === true,
+        talk: linha.talk === true,
       },
       ultima_designacao: undefined,
       contador_designacoes: 0,
-      data_nascimento: new Date(linha.data_nascimento || '1990-01-01'),
+      designacoes_recentes: 0,
+      data_nascimento: linha.data_nascimento ? new Date(linha.data_nascimento) : new Date('1990-01-01'),
       responsavel_primario: linha.responsavel_primario,
       responsavel_secundario: linha.responsavel_secundario
     }));
