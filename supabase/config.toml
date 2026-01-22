@@ -5,3 +5,18 @@ verify_jwt = false
 
 [functions.fetch-jworg-programs]
 verify_jwt = false
+
+[functions.generate-assignments]
+verify_jwt = false
+
+[functions.list-programs-json]
+verify_jwt = false
+
+[functions.save-assignments]
+verify_jwt = false
+
+[functions.generate-treasures-assignments]
+verify_jwt = false
+
+[functions.send-family-invitation]
+verify_jwt = false
