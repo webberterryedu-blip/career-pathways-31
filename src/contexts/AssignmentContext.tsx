@@ -171,7 +171,7 @@ export function AssignmentProvider({ children }: { children: ReactNode }) {
     setOptimisticUpdates(prev => prev.filter(u => u.id !== updateId));
   }, []);
 
-  // Convert database row to Assignment interface
+  // Convert database row to Assignment interface (from designacoes table)
   const mapDesignacaoToAssignment = (designacao: any): Assignment => ({
     id: designacao.id,
     programId: designacao.parte_id || '',
@@ -188,6 +188,24 @@ export function AssignmentProvider({ children }: { children: ReactNode }) {
     updatedAt: designacao.updated_at || ''
   });
 
+  // Convert assignment_history row to Assignment interface
+  const mapHistoryToAssignment = (history: any): Assignment => ({
+    id: history.id,
+    programId: history.week || '', // Use week as program identifier
+    studentId: history.student_id || '',
+    assistantId: history.assistant_id || undefined,
+    partType: history.assignment_type || '',
+    partNumber: 0,
+    weekDate: history.meeting_date || history.week || '',
+    status: history.status === 'confirmed' ? 'confirmed' : 
+            history.status === 'cancelled' ? 'cancelled' : 'pending',
+    studyPoint: history.assignment_title || undefined,
+    counselNotes: history.observations || undefined,
+    timing: history.assignment_duration || 0,
+    createdAt: history.created_at || '',
+    updatedAt: history.updated_at || ''
+  });
+
   // Convert Assignment to database insert
   const mapAssignmentToInsert = (assignment: Omit<Assignment, 'id' | 'createdAt' | 'updatedAt'>): any => ({
     parte_id: assignment.programId,
@@ -198,32 +216,50 @@ export function AssignmentProvider({ children }: { children: ReactNode }) {
     observacoes: assignment.studyPoint || assignment.counselNotes
   });
 
-  // Load assignments from database
+  // Load assignments from both designacoes and assignment_history tables
   const loadAssignments = useCallback(async () => {
-    if (!user) return;
-
     try {
       setLoading(true);
       setError(null);
 
-      const { data, error: fetchError } = await supabase
-        .from('designacoes')
-        .select('*')
-        .order('data_designacao', { ascending: true });
+      // Fetch from both tables in parallel
+      const [designacoesResult, historyResult] = await Promise.all([
+        supabase.from('designacoes').select('*').order('data_designacao', { ascending: true }),
+        supabase.from('assignment_history').select('*').order('meeting_date', { ascending: true })
+      ]);
 
-      if (fetchError) {
-        throw fetchError;
+      if (designacoesResult.error) {
+        console.error('Error fetching designacoes:', designacoesResult.error);
       }
 
-      const mappedAssignments = (data || []).map(mapDesignacaoToAssignment);
-      setAssignments(mappedAssignments);
+      if (historyResult.error) {
+        console.error('Error fetching assignment_history:', historyResult.error);
+      }
+
+      // Map and combine assignments from both sources
+      const designacoesAssignments = (designacoesResult.data || []).map(mapDesignacaoToAssignment);
+      const historyAssignments = (historyResult.data || []).map(mapHistoryToAssignment);
+
+      // Combine both sources, prioritizing history if duplicates exist
+      const combinedAssignments = [...historyAssignments, ...designacoesAssignments];
+      
+      // Remove duplicates by ID
+      const uniqueAssignments = combinedAssignments.reduce((acc, curr) => {
+        const existing = acc.find(a => a.id === curr.id);
+        if (!existing) {
+          acc.push(curr);
+        }
+        return acc;
+      }, [] as Assignment[]);
+
+      setAssignments(uniqueAssignments);
     } catch (err) {
       console.error('Error loading assignments:', err);
       setError(err instanceof Error ? err.message : 'Failed to load assignments');
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
   // Create new assignment with optimistic updates
   const createAssignment = useCallback(async (
@@ -807,13 +843,9 @@ export function AssignmentProvider({ children }: { children: ReactNode }) {
 
   // Load assignments on mount and when user changes
   useEffect(() => {
-    if (user) {
-      loadAssignments();
-    } else {
-      setAssignments([]);
-      setOptimisticUpdates([]);
-    }
-  }, [user, loadAssignments]);
+    // Load assignments regardless of user auth state (RLS handles access control)
+    loadAssignments();
+  }, [loadAssignments]);
 
   // Cleanup subscriptions on unmount
   useEffect(() => {
