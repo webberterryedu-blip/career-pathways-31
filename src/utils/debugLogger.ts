@@ -67,7 +67,7 @@ class DebugLogger {
     }
   }
 
-  logLogoutAttempt(buttonType: 'dropdown' | 'test', user?: any) {
+  logLogoutAttempt(buttonType: 'dropdown' | 'test' | 'force', user?: any) {
     this.log('LOGOUT', `Logout Button Clicked - ${buttonType}`, {
       buttonType,
       timestamp: Date.now(),
