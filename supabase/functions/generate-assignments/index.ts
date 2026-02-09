@@ -394,8 +394,15 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Parse request body
-    const { semana, data_reuniao, partes_customizadas } = await req.json();
+    // Parse request body (support both naming conventions)
+    const body = await req.json();
+    const semana = body.semana || body.programacao_id;
+    const data_reuniao = body.data_reuniao || body.programacao_id;
+    const partes_customizadas = body.partes_customizadas;
+    
+    if (!semana) {
+      throw new Error('Missing required field: semana or programacao_id');
+    }
     
     console.log(`🔄 Starting assignment generation for week ${semana}...`);
     
