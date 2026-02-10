@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.send-family-invitation]
 verify_jwt = false
+
+[functions.parse-mwb-pdf]
+verify_jwt = false

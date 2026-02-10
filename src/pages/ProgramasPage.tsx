@@ -62,12 +62,15 @@ interface ParteMeeting {
 const ImportacaoPDF: React.FC<{ onImportComplete: (programa: ProgramaSemanal) => void }> = ({ onImportComplete }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [extractedData, setExtractedData] = useState<any>(null);
+  const [extractedProgramas, setExtractedProgramas] = useState<any[]>([]);
+  const [mesAno, setMesAno] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === 'application/pdf') {
       setSelectedFile(file);
+      setExtractedProgramas([]);
     } else {
       toast({
         title: "Arquivo inválido",
@@ -82,64 +85,29 @@ const ImportacaoPDF: React.FC<{ onImportComplete: (programa: ProgramaSemanal) =>
 
     setIsProcessing(true);
     try {
-      // Simular processamento do PDF (implementar com pdf-parse)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Dados mockados baseados nos PDFs fornecidos
-      const mockData = {
-        semana: "2-8 de dezembro de 2024",
-        data_inicio: "2024-12-02",
-        mes_ano: "dezembro de 2024",
-        partes: [
-          {
-            numero: 3,
-            titulo: "Leitura da Bíblia",
-            tempo: 4,
-            tipo: "leitura_biblica",
-            secao: "TESOUROS",
-            referencia: "Provérbios 25:1-17",
-            instrucoes: "Apenas homens. Sem introdução ou conclusão."
-          },
-          {
-            numero: 4,
-            titulo: "Iniciando conversas",
-            tempo: 3,
-            tipo: "demonstracao",
-            secao: "MINISTERIO",
-            cena: "De casa em casa",
-            instrucoes: "Demonstração. Ajudante do mesmo sexo ou parente."
-          },
-          {
-            numero: 5,
-            titulo: "Cultivando o interesse",
-            tempo: 4,
-            tipo: "demonstracao",
-            secao: "MINISTERIO",
-            cena: "Revisita",
-            instrucoes: "Demonstração. Ajudante do mesmo sexo."
-          },
-          {
-            numero: 6,
-            titulo: "Explicando suas crenças",
-            tempo: 5,
-            tipo: "discurso",
-            secao: "MINISTERIO",
-            instrucoes: "Discurso. Apenas homens qualificados."
-          }
-        ]
-      };
+      const formData = new FormData();
+      formData.append('pdf', selectedFile);
+      formData.append('save', 'false');
 
-      setExtractedData(mockData);
-      
-      toast({
-        title: "PDF processado com sucesso!",
-        description: `Extraídas ${mockData.partes.length} partes da reunião.`
+      const { data, error } = await supabase.functions.invoke('parse-mwb-pdf', {
+        body: formData,
       });
 
-    } catch (error) {
+      if (error) throw new Error(error.message || 'Erro ao processar PDF');
+      if (!data?.success) throw new Error(data?.error || 'Falha no processamento');
+
+      setExtractedProgramas(data.programas || []);
+      setMesAno(data.mes_ano || '');
+
+      toast({
+        title: "PDF processado com sucesso!",
+        description: `${data.total_semanas} semana(s) extraída(s) do PDF.`
+      });
+    } catch (error: any) {
+      console.error('PDF parse error:', error);
       toast({
         title: "Erro ao processar PDF",
-        description: "Não foi possível extrair os dados da apostila.",
+        description: error.message || "Não foi possível extrair os dados da apostila.",
         variant: "destructive"
       });
     } finally {
@@ -147,22 +115,72 @@ const ImportacaoPDF: React.FC<{ onImportComplete: (programa: ProgramaSemanal) =>
     }
   };
 
-  const confirmarImportacao = () => {
-    if (extractedData) {
-      const programa: ProgramaSemanal = {
-        id: Date.now().toString(),
-        semana: extractedData.semana,
-        data_inicio: extractedData.data_inicio,
-        mes_ano: extractedData.mes_ano,
-        partes: extractedData.partes,
-        criado_em: new Date().toISOString(),
-        atualizado_em: new Date().toISOString()
-      };
-      
-      onImportComplete(programa);
+  const salvarNoBanco = async () => {
+    if (!selectedFile || extractedProgramas.length === 0) return;
+
+    setIsSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append('pdf', selectedFile);
+      formData.append('save', 'true');
+
+      const { data, error } = await supabase.functions.invoke('parse-mwb-pdf', {
+        body: formData,
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data?.success) throw new Error(data?.error || 'Falha ao salvar');
+
+      toast({
+        title: "Programas salvos!",
+        description: `${data.saved} programa(s) salvo(s) no banco de dados.`
+      });
+
+      // Import each week as a program into the local state
+      for (const prog of data.programas || []) {
+        const programa: ProgramaSemanal = {
+          id: prog.semana_inicio || Date.now().toString(),
+          semana: prog.semana_label || prog.tema || prog.semana_inicio,
+          data_inicio: prog.semana_inicio,
+          mes_ano: prog.mes_ano || mesAno,
+          tema: prog.tema,
+          partes: (prog.partes || []).map((p: any) => ({
+            numero: p.ordem,
+            titulo: p.titulo,
+            tempo: p.duracao_min,
+            tipo: p.tipo,
+            secao: p.secao === 'tesouros' ? 'TESOUROS' : p.secao === 'ministerio' ? 'MINISTÉRIO' : 'VIDA CRISTÃ',
+            referencia: p.referencia,
+          })),
+          criado_em: new Date().toISOString(),
+          atualizado_em: new Date().toISOString()
+        };
+        onImportComplete(programa);
+      }
+
       setSelectedFile(null);
-      setExtractedData(null);
+      setExtractedProgramas([]);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao salvar",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const secaoColors: Record<string, string> = {
+    tesouros: 'bg-amber-100 text-amber-800 border-amber-200',
+    ministerio: 'bg-green-100 text-green-800 border-green-200',
+    vida_crista: 'bg-purple-100 text-purple-800 border-purple-200',
+  };
+
+  const secaoLabels: Record<string, string> = {
+    tesouros: 'Tesouros da Palavra de Deus',
+    ministerio: 'Faça Seu Melhor no Ministério',
+    vida_crista: 'Nossa Vida Cristã',
   };
 
   return (
@@ -173,7 +191,7 @@ const ImportacaoPDF: React.FC<{ onImportComplete: (programa: ProgramaSemanal) =>
           Importar Apostila MWB (PDF)
         </CardTitle>
         <CardDescription>
-          Faça upload do PDF oficial da apostila "Vida e Ministério Cristão" para extrair automaticamente as partes da reunião
+          Faça upload do PDF oficial da apostila "Vida e Ministério Cristão". A IA extrairá automaticamente todas as semanas e partes.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -183,16 +201,16 @@ const ImportacaoPDF: React.FC<{ onImportComplete: (programa: ProgramaSemanal) =>
             type="file"
             accept=".pdf"
             onChange={handleFileSelect}
-            disabled={isProcessing}
+            disabled={isProcessing || isSaving}
           />
           {selectedFile && (
-            <p className="text-sm text-gray-600">
-              Arquivo selecionado: {selectedFile.name}
+            <p className="text-sm text-muted-foreground">
+              📄 {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(1)} MB)
             </p>
           )}
         </div>
 
-        {selectedFile && !extractedData && (
+        {selectedFile && extractedProgramas.length === 0 && (
           <Button 
             onClick={processPDF} 
             disabled={isProcessing}
@@ -201,7 +219,7 @@ const ImportacaoPDF: React.FC<{ onImportComplete: (programa: ProgramaSemanal) =>
             {isProcessing ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                Processando PDF...
+                Extraindo com IA... (pode levar até 30s)
               </>
             ) : (
               <>
@@ -212,39 +230,71 @@ const ImportacaoPDF: React.FC<{ onImportComplete: (programa: ProgramaSemanal) =>
           </Button>
         )}
 
-        {extractedData && (
+        {extractedProgramas.length > 0 && (
           <div className="space-y-4">
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Dados extraídos:</strong> {extractedData.semana}
-                <br />
-                <strong>Partes identificadas:</strong> {extractedData.partes.length}
+                <strong>{extractedProgramas.length} semana(s) extraída(s)</strong>
+                {mesAno && <span className="ml-1">— {mesAno}</span>}
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-2">
-              <h4 className="font-medium">Partes da reunião:</h4>
-              {extractedData.partes.map((parte: ParteMeeting, index: number) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                  <div>
-                    <span className="font-medium">{parte.numero}. {parte.titulo}</span>
-                    {parte.referencia && (
-                      <span className="text-sm text-gray-600 ml-2">({parte.referencia})</span>
-                    )}
+            <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
+              {extractedProgramas.map((prog: any, weekIdx: number) => (
+                <div key={weekIdx} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-base">
+                      📅 {prog.semana_label || prog.tema}
+                    </h4>
+                    <Badge variant="secondary">{(prog.partes || []).length} partes</Badge>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{parte.tempo} min</Badge>
-                    <Badge variant="outline">{parte.tipo}</Badge>
+                  {prog.tema && (
+                    <p className="text-sm font-medium text-primary">{prog.tema}</p>
+                  )}
+                  {prog.leitura_biblica && (
+                    <p className="text-sm text-muted-foreground">📖 Leitura: {prog.leitura_biblica}</p>
+                  )}
+                  <div className="space-y-1">
+                    {(prog.partes || []).map((parte: any, pIdx: number) => (
+                      <div key={pIdx} className={`flex items-center justify-between p-2 rounded border ${secaoColors[parte.secao] || 'bg-muted'}`}>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium">{parte.ordem}. {parte.titulo}</span>
+                          {parte.referencia && (
+                            <span className="text-xs ml-2 opacity-70">({parte.referencia})</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 ml-2">
+                          <Badge variant="secondary" className="text-xs">{parte.duracao_min} min</Badge>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
             </div>
 
-            <Button onClick={confirmarImportacao} className="w-full">
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Confirmar Importação
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={salvarNoBanco} className="flex-1" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Salvar no Banco e Importar
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => { setExtractedProgramas([]); setSelectedFile(null); }}
+              >
+                Cancelar
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
