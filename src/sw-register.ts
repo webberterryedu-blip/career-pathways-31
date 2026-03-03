@@ -33,12 +33,7 @@ const swRegister: SWRegister = {
               });
             })
             .catch((registrationError) => {
-              console.warn('⚠️ Service Worker registration failed:', registrationError);
-              // Tentar limpar caches e tentar novamente
-              this.clearCaches().then(() => {
-                console.log('🔄 Retrying Service Worker registration...');
-                setTimeout(() => this.register(), 1000);
-              });
+              console.warn('⚠️ Service Worker registration skipped (sw.js not found)');
             });
         });
       });
