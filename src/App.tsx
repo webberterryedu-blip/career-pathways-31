@@ -53,6 +53,7 @@ const Suporte = lazy(() => import("./pages/Suporte"));
 const Sobre = lazy(() => import("./pages/Sobre"));
 const Doar = lazy(() => import("./pages/Doar"));
 const BemVindo = lazy(() => import("./pages/BemVindo"));
+const Landing = lazy(() => import("./pages/Landing"));
 const ConfiguracaoInicial = lazy(() => import("./pages/ConfiguracaoInicial"));
 const PrimeiroPrograma = lazy(() => import("./pages/PrimeiroPrograma"));
 const Reunioes = lazy(() => import("./pages/Reunioes"));
@@ -176,9 +177,9 @@ const App = () => {
                                 <Routes>
                     {/* Public Routes */}
                     <Route path="/" element={
-                      import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true' 
+                      import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true'
                         ? <Navigate to="/dashboard" replace />
-                        : <Navigate to="/auth" replace />
+                        : <Landing />
                     } />
                     <Route path="/auth" element={
                       <DevBypassRedirect>
