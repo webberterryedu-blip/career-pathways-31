@@ -19,11 +19,8 @@ import { TutorialOverlay } from "@/components/tutorial";
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineErrorBoundary } from "@/components/OfflineErrorBoundary";
-import { initializeDebugUtils } from "@/utils/debugOffline";
-import { initializeAuthDebugUtils } from "@/utils/debugAuth";
 import { DevBypassNotification } from "@/components/DevBypassNotification";
 import { DevBypassRedirect } from "@/components/DevBypassRedirect";
-import { DiagnosticPanel } from "@/components/dev/DiagnosticPanel";
 
 // Eager load critical components
 // import Index from "./pages/Index";
@@ -78,22 +75,7 @@ const RouteLoader = () => (
   </div>
 );
 
-// Conditional debug tools loading - only in development
-if (import.meta.env.DEV && import.meta.env.VITE_LOG_LEVEL !== 'error') {
-  console.log('🔧 Loading debug tools for development environment...');
-  
-  // Load debug tools asynchronously to avoid blocking startup
-  Promise.all([
-    import("@/utils/forceLogout"),
-    import("@/utils/supabaseHealthCheck"),
-    import("@/utils/logoutDiagnostics"),
-    import("@/utils/emergencyLogout")
-  ]).then(() => {
-    console.log('✅ Debug tools loaded successfully');
-  }).catch(error => {
-    console.warn('⚠️ Some debug tools failed to load:', error);
-  });
-}
+// Debug tools removed
 
 // Floating navigation between key instructor pages
 const FlowNav: React.FC = () => {
@@ -125,27 +107,7 @@ const App = () => {
   // Performance monitoring for the main app
   usePerformanceMonitoring('App');
   
-  // Initialize debug utilities in development
-  React.useEffect(() => {
-    if (import.meta.env.DEV) {
-      initializeDebugUtils();
-      initializeAuthDebugUtils();
-      
-      // Show helpful message about errors
-      setTimeout(() => {
-        console.log('%c🔧 Debug Tools Loaded', 'color: #2196F3; font-weight: bold; font-size: 16px;');
-        console.log('%c📱 Offline Storage:', 'color: #4CAF50; font-weight: bold;');
-        console.log('  debugOffline.checkHealth() - Check database health');
-        console.log('  debugOffline.resetDatabase() - Reset if corrupted');
-        console.log('%c🔐 Authentication:', 'color: #FF9800; font-weight: bold;');
-        console.log('  debugAuth.checkConnection() - Test Supabase connection');
-        console.log('  debugAuth.createTestUser("test@example.com", "123456") - Create test user');
-        console.log('  debugAuth.resetPassword("email") - Reset password');
-        console.log('%c💡 Quick Fix for Login Issues:', 'color: #E91E63; font-weight: bold;');
-        console.log('  debugAuth.createTestUser("admin@test.com", "123456")');
-      }, 2000);
-    }
-  }, []);
+  // Debug utilities removed
   
   return (
   <ErrorBoundary>
@@ -163,7 +125,7 @@ const App = () => {
                         <TooltipProvider>
                           <Sonner />
                           <TutorialOverlay />
-                          <DiagnosticPanel />
+                          {/* DiagnosticPanel removed */}
                           {!(typeof window !== 'undefined' && window.location.pathname === '/auth') && <DevBypassNotification />}
                           <BrowserRouter
                             future={{

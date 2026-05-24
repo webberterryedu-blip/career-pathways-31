@@ -5,7 +5,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate, Link } from "react-router-dom";
 import { LogOut, User, Settings, Languages } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useDebugLogger } from "@/utils/debugLogger";
 import { useTranslation } from "@/hooks/useTranslation";
 import { MobileNavigation } from "@/components/navigation/MobileNavigation";
 import { forceLogout } from "@/utils/forceLogout";
@@ -23,7 +22,6 @@ const Header = () => {
     const { t, language } = useTranslation();
     const { toggleLanguage } = useLanguage();
     const navigate = useNavigate();
-    const { logLogoutAttempt, logLogoutResult, logError, logNavigation } = useDebugLogger();
 
   // Create fallback role checking for when profile hasn't loaded yet
   const userIsInstrutor = isInstrutor || user?.user_metadata?.role === 'instrutor';
@@ -31,59 +29,32 @@ const Header = () => {
 
   const handleSignOut = async (buttonType: 'dropdown' | 'test' = 'dropdown') => {
     console.log(`🚪 Header logout button clicked - ${buttonType}`);
-    logLogoutAttempt(buttonType, user);
 
     try {
-      console.log('🔄 Calling signOut function...');
-      console.log('🔄 User before signOut:', user?.email, user?.id);
-
-      // Call signOut with built-in timeout handling
       const signOutResult = await signOut();
-      console.log('🔄 SignOut result:', signOutResult);
-
       const { error } = signOutResult;
 
       if (error) {
         console.error('❌ SignOut error:', error);
-        logLogoutResult(false, error, user);
-        logError(error, 'Header handleSignOut', user);
-
-        // Use force logout as fallback
-        console.log('🔄 Using force logout as fallback...');
         toast({
           title: t("Logout Forçado"),
           description: t("Usando logout de emergência..."),
         });
-        
         forceLogout();
         return;
       } else {
-        console.log('✅ SignOut successful, navigating to home...');
-        logLogoutResult(true, null, user);
-        logNavigation(window.location.pathname, '/', user);
-
         toast({
           title: t("Sessão encerrada"),
           description: t("Você foi desconectado com sucesso."),
         });
-
-        // Small delay to ensure logs are captured
-        setTimeout(() => {
-          navigate('/');
-        }, 500);
+        setTimeout(() => navigate('/'), 500);
       }
     } catch (error) {
       console.error('❌ Header logout exception:', error);
-      logLogoutResult(false, error, user);
-      logError(error, 'Header handleSignOut Exception', user);
-
-      // Use force logout as fallback
-      console.log('🔄 Using force logout as fallback due to exception...');
       toast({
         title: t("Logout de Emergência"),
         description: t("Usando logout forçado..."),
       });
-      
       forceLogout();
     }
   };
