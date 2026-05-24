@@ -61,10 +61,9 @@ class DebugLogger {
 
     console.log(`${emoji} [${type}] ${action}`, details);
 
-    // Auto-save a cada 5 logs ou em caso de erro
-    if (this.logs.length % 5 === 0 || type === 'ERROR') {
-      this.saveToFile();
-    }
+    // Auto-save desabilitado para evitar downloads automáticos no navegador.
+    // Use debugLogger.downloadLog() manualmente quando precisar exportar.
+
   }
 
   logLogoutAttempt(buttonType: 'dropdown' | 'test' | 'force', user?: any) {
