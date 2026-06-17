@@ -44,7 +44,7 @@ export const useProfileLoader = () => {
       const { data, error } = await supabase
         .from('profiles')
         .insert({
-          user_id: user.id,
+          id: user.id,
           nome: metadata.nome_completo || '',
           email: email,
           congregacao: metadata.congregacao || '',
