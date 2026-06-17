@@ -102,7 +102,7 @@ export type Database = {
       }
       designacoes: {
         Row: {
-          assistente_id: string | null
+          ajudante_id: string | null
           cancelado_em: string | null
           confirmado_em: string | null
           created_at: string
@@ -116,7 +116,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          assistente_id?: string | null
+          ajudante_id?: string | null
           cancelado_em?: string | null
           confirmado_em?: string | null
           created_at?: string
@@ -130,7 +130,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          assistente_id?: string | null
+          ajudante_id?: string | null
           cancelado_em?: string | null
           confirmado_em?: string | null
           created_at?: string
@@ -146,14 +146,14 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "designacoes_assistente_id_fkey"
-            columns: ["assistente_id"]
+            columns: ["ajudante_id"]
             isOneToOne: false
             referencedRelation: "estudantes"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "designacoes_assistente_id_fkey"
-            columns: ["assistente_id"]
+            columns: ["ajudante_id"]
             isOneToOne: false
             referencedRelation: "vw_estudantes_grid"
             referencedColumns: ["id"]
@@ -296,7 +296,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "estudantes_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       historico_designacoes: {
         Row: {
@@ -463,27 +471,33 @@ export type Database = {
       }
       profiles: {
         Row: {
+          cargo: string | null
           created_at: string | null
           email: string | null
           id: string
           nome: string | null
           role: string | null
+          telefone: string | null
           updated_at: string | null
         }
         Insert: {
+          cargo?: string | null
           created_at?: string | null
           email?: string | null
           id: string
           nome?: string | null
           role?: string | null
+          telefone?: string | null
           updated_at?: string | null
         }
         Update: {
+          cargo?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
           nome?: string | null
           role?: string | null
+          telefone?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -824,7 +838,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "estudantes_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
