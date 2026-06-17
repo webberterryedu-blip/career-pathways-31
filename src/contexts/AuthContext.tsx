@@ -213,7 +213,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('user_id', userId as any)
+          .eq('id', userId as any)
           .maybeSingle();
 
         // If that fails due to RLS, it means the user_id in the profile doesn't match auth.uid()
@@ -235,7 +235,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Update the profile to have the correct user_id
             const { data: updatedProfile, error: updateError } = await supabase
               .from('profiles')
-              .update({ user_id: userId })
+              .update({ id: userId } as any)
               .eq('id', emailProfileData.id)
               .select('*')
               .single();
@@ -337,7 +337,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('user_id', userId as any)
+          .eq('id', userId as any)
           .maybeSingle();
 
         // If that fails, try by id (old schema)
@@ -662,7 +662,7 @@ Para redefinir sua senha:
           ...updates,
           updated_at: new Date().toISOString(),
         } as any)
-        .eq('user_id', user.id as any)
+        .eq('id', user.id as any)
         .select('*')
         .single();
 
@@ -777,7 +777,7 @@ Desative a confirma��o de email nas configura��es do Supabase.`);
             const { data: userByIdProfile, error: userByIdError } = await supabase
               .from('profiles')
               .select('*')
-              .eq('user_id', session.user.id)
+              .eq('id', session.user.id)
               .maybeSingle();
             
             if (userByIdProfile) {
