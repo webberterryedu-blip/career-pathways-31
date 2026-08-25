@@ -96,7 +96,7 @@ async function scrapeUrl(url: string, apiKey: string): Promise<string | null> {
 }
 
 // Parse WOL meeting program page
-function parseWolMeetingPage(markdown: string, url: string, year: number, weekNum: number): ProgramaSemana | null {
+function parseWolMeetingPage(markdown: string, url: string, year: number, weekNum: number, idioma: string = 'pt'): ProgramaSemana | null {
   try {
     console.log(`Parsing WOL page, content length: ${markdown.length}`);
     
@@ -120,6 +120,8 @@ function parseWolMeetingPage(markdown: string, url: string, year: number, weekNu
     let leituraBiblica = '';
     const leituraPatterns = [
       /LEITURA DA BÍBLIA:\s*([^\n(]+)/i,
+      /BIBLE READING:\s*([^\n(]+)/i,
+      /Weekly Bible reading:\s*([^\n]+)/i,
       /Leitura semanal da Bíblia:\s*([^\n]+)/i,
       /LEITURA BÍBLICA:\s*([^\n]+)/i,
       /(\d?\s*[A-ZÁÀÂÃÉÈÊÍÏÓÔÕÖÚÜÇ]+\s+\d+(?:[-–]\d+)?)/i
@@ -169,7 +171,7 @@ function parseWolMeetingPage(markdown: string, url: string, year: number, weekNu
       cantico_meio: songs[1] || 0,
       cantico_final: songs[2] || 0,
       partes,
-      idioma: 'pt',
+      idioma,
       fonte_url: url
     };
   } catch (error) {
@@ -185,9 +187,9 @@ function parsePartes(content: string): ParteProgramacao[] {
   
   // Define section markers
   const sectionMarkers = [
-    { pattern: /TESOUROS DA PALAVRA DE DEUS/i, secao: 'tesouros' as const },
-    { pattern: /FAÇA SEU MELHOR NO MINISTÉRIO|APLIQUE-SE AO MINISTÉRIO/i, secao: 'ministerio' as const },
-    { pattern: /NOSSA VIDA CRISTÃ|VIVER COMO CRISTÃOS/i, secao: 'vida_crista' as const }
+    { pattern: /TESOUROS DA PALAVRA DE DEUS|TREASURES FROM GOD'?S WORD/i, secao: 'tesouros' as const },
+    { pattern: /FAÇA SEU MELHOR NO MINISTÉRIO|APLIQUE-SE AO MINISTÉRIO|APPLY YOURSELF TO THE FIELD MINISTRY|FIELD MINISTRY/i, secao: 'ministerio' as const },
+    { pattern: /NOSSA VIDA CRISTÃ|VIVER COMO CRISTÃOS|LIVING AS CHRISTIANS/i, secao: 'vida_crista' as const }
   ];
   
   // Find section positions
@@ -233,7 +235,7 @@ function parsePartes(content: string): ParteProgramacao[] {
         .trim();
       
       if (titulo.length < 3 || titulo.length > 150) continue;
-      if (/^(TESOUROS|FAÇA SEU|NOSSA VIDA|CÂNTICO)/i.test(titulo)) continue;
+      if (/^(TESOUROS|FAÇA SEU|NOSSA VIDA|CÂNTICO|TREASURES|FIELD MINISTRY|LIVING AS|SONG)/i.test(titulo)) continue;
       
       const duracao = parseInt(match[2]);
       if (duracao <= 0 || duracao > 60) continue;
@@ -283,20 +285,20 @@ function determineTipo(titulo: string, secao: string): string {
   
   if (secao === 'tesouros') {
     if (tituloLower.includes('joias') || tituloLower.includes('gems')) return 'joias_espirituais';
-    if (tituloLower.includes('leitura') && tituloLower.includes('bíblia')) return 'leitura_biblia';
+    if ((tituloLower.includes('leitura') && tituloLower.includes('bíblia')) || tituloLower.includes('bible reading')) return 'leitura_biblia';
     return 'discurso_tesouros';
   }
   
   if (secao === 'ministerio') {
-    if (tituloLower.includes('primeira conversa') || tituloLower.includes('iniciando')) return 'primeira_conversa';
-    if (tituloLower.includes('revisita') || tituloLower.includes('cultivando')) return 'revisita';
-    if (tituloLower.includes('estudo bíblico') && !tituloLower.includes('congregação')) return 'estudo_biblico';
-    if (tituloLower.includes('discurso')) return 'discurso_estudante';
+    if (tituloLower.includes('primeira conversa') || tituloLower.includes('iniciando') || tituloLower.includes('starting a conversation')) return 'primeira_conversa';
+    if (tituloLower.includes('revisita') || tituloLower.includes('cultivando') || tituloLower.includes('following up')) return 'revisita';
+    if ((tituloLower.includes('estudo bíblico') || tituloLower.includes('making disciples')) && !tituloLower.includes('congregação')) return 'estudo_biblico';
+    if (tituloLower.includes('discurso') || tituloLower.includes('talk')) return 'discurso_estudante';
     return 'parte_ministerio';
   }
   
   if (secao === 'vida_crista') {
-    if (tituloLower.includes('estudo bíblico de congregação') || tituloLower.includes('estudo de')) return 'estudo_congregacao';
+    if (tituloLower.includes('estudo bíblico de congregação') || tituloLower.includes('estudo de') || tituloLower.includes('congregation bible study')) return 'estudo_congregacao';
     if (tituloLower.includes('necessidades') || tituloLower.includes('anúncios')) return 'necessidades_congregacao';
     if (tituloLower.includes('comentários finais')) return 'comentarios_finais';
     return 'parte_vida_crista';
@@ -402,7 +404,7 @@ Deno.serve(async (req) => {
         continue;
       }
       
-      const programa = parseWolMeetingPage(content, wolUrl, year, week);
+      const programa = parseWolMeetingPage(content, wolUrl, year, week, idioma);
       
       if (programa && programa.partes.length > 0) {
         console.log(`✅ Parsed program for week ${week}/${year}: ${programa.partes.length} parts`);
