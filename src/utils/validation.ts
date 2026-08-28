@@ -31,7 +31,7 @@ export const StudentSchema = z.object({
   nome: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name too long'),
   email: z.string().email('Invalid email format').optional().or(z.literal('')),
   telefone: z.string().regex(/^\+?[\d\s\-\(\)]+$/, 'Invalid phone format').optional().or(z.literal('')),
-  genero: z.enum(['masculino', 'feminino'], { required_error: 'Gender is required' }),
+  genero: z.enum(['masculino', 'feminino'], { error: 'Gender is required' }),
   data_nascimento: z.string().refine((date) => {
     const birthDate = new Date(date);
     const today = new Date();
@@ -45,7 +45,7 @@ export const StudentSchema = z.object({
     pode_fazer_demonstracoes: z.boolean().default(true),
     pode_assistir: z.boolean().default(true),
     nivel_experiencia: z.enum(['iniciante', 'intermediario', 'avancado']).default('iniciante')
-  }).default({}),
+  }).prefault({}),
   familia_id: z.string().uuid().optional(),
   ativo: z.boolean().default(true),
   observacoes: z.string().max(500, 'Notes too long').optional()
@@ -64,7 +64,7 @@ export const AssignmentSchema = z.object({
     'fazendo_discipulos',
     'explicando_crencas',
     'discurso'
-  ], { required_error: 'Part type is required' }),
+  ], { error: 'Part type is required' }),
   ponto_estudo: z.string().min(1, 'Study point is required').max(200, 'Study point too long'),
   data_semana: z.string().refine((date) => {
     const assignmentDate = new Date(date);
@@ -143,7 +143,7 @@ export class ValidationEngine {
     const warnings: ValidationWarning[] = [];
 
     if (!result.success) {
-      result.error.errors.forEach(error => {
+      result.error.issues.forEach(error => {
         errors.push({
           field: error.path.join('.'),
           message: error.message,
@@ -198,7 +198,7 @@ export class ValidationEngine {
     const warnings: ValidationWarning[] = [];
 
     if (!result.success) {
-      result.error.errors.forEach(error => {
+      result.error.issues.forEach(error => {
         errors.push({
           field: error.path.join('.'),
           message: error.message,
@@ -247,7 +247,7 @@ export class ValidationEngine {
     const warnings: ValidationWarning[] = [];
 
     if (!result.success) {
-      result.error.errors.forEach(error => {
+      result.error.issues.forEach(error => {
         errors.push({
           field: error.path.join('.'),
           message: error.message,
@@ -469,7 +469,7 @@ export const validateField = (schema: z.ZodSchema, value: any): ValidationResult
     return { isValid: true, errors: [], warnings: [] };
   }
 
-  const errors: ValidationError[] = result.error.errors.map(error => ({
+  const errors: ValidationError[] = result.error.issues.map(error => ({
     field: error.path.join('.'),
     message: error.message,
     code: error.code,
