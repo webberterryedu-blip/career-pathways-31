@@ -143,7 +143,7 @@ export class ValidationEngine {
     const warnings: ValidationWarning[] = [];
 
     if (!result.success) {
-      result.error.errors.forEach(error => {
+      result.error.issues.forEach(error => {
         errors.push({
           field: error.path.join('.'),
           message: error.message,
@@ -198,7 +198,7 @@ export class ValidationEngine {
     const warnings: ValidationWarning[] = [];
 
     if (!result.success) {
-      result.error.errors.forEach(error => {
+      result.error.issues.forEach(error => {
         errors.push({
           field: error.path.join('.'),
           message: error.message,
@@ -247,7 +247,7 @@ export class ValidationEngine {
     const warnings: ValidationWarning[] = [];
 
     if (!result.success) {
-      result.error.errors.forEach(error => {
+      result.error.issues.forEach(error => {
         errors.push({
           field: error.path.join('.'),
           message: error.message,
@@ -469,7 +469,7 @@ export const validateField = (schema: z.ZodSchema, value: any): ValidationResult
     return { isValid: true, errors: [], warnings: [] };
   }
 
-  const errors: ValidationError[] = result.error.errors.map(error => ({
+  const errors: ValidationError[] = result.error.issues.map(error => ({
     field: error.path.join('.'),
     message: error.message,
     code: error.code,
