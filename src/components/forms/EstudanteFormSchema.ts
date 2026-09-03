@@ -103,6 +103,6 @@ export const estudanteFormSchema = z.object({
   making: z.boolean(),
   explaining: z.boolean(),
   talk: z.boolean(),
-}) satisfies z.ZodType<EstudanteFormData>;
+});
 
 export type EstudanteFormValues = z.infer<typeof estudanteFormSchema>;
