@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { EstudanteFormData } from "@/types/estudantes";
 
 const CARGOS = [
   "anciao",
