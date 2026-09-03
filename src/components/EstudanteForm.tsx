@@ -19,6 +19,8 @@ import {
   getQualificacoes,
   EstudanteFormData,
 } from "@/types/estudantes";
+import { estudanteFormSchema } from "@/components/forms/EstudanteFormSchema";
+import { getZodFieldErrorStrings } from "@/utils/zodFieldErrors";
 
 interface EstudanteFormProps {
   estudante?: EstudanteWithParent;
@@ -125,28 +127,20 @@ const EstudanteForm = ({ estudante, potentialParents, onSubmit, onCancel, loadin
   }, [formData.cargo, formData.genero, formData.data_nascimento]);
 
   const handleInputChange = (field: string, value: string | number | boolean | Date | null) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear error for this field
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
-    }
+    const next = { ...formData, [field]: value };
+    setFormData(next);
+    // Validação Zod do campo alterado (via error.issues) — mensagem específica por campo
+    const fieldErrors = getZodFieldErrorStrings(estudanteFormSchema, next);
+    setErrors(prev => ({ ...prev, [field]: fieldErrors[field] || "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
-    const validationErrors: Record<string, string> = {};
-    if (!formData.nome.trim()) {
-      validationErrors.nome = 'Nome é obrigatório';
-    }
-    if (!formData.genero) {
-      validationErrors.genero = 'Gênero é obrigatório';
-    }
-    
+    // Validação via Zod (error.issues) — mensagens específicas por campo
+    const validationErrors = getZodFieldErrorStrings(estudanteFormSchema, formData);
     setErrors(validationErrors);
-    
+
     if (Object.keys(validationErrors).length > 0) {
       return;
     }
