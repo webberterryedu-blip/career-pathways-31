@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User, Users, Clock, AlertTriangle, Save, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { assignmentEditSchema } from "@/components/forms/AssignmentFormSchema";
+import { getZodFieldErrorStrings } from "@/utils/zodFieldErrors";
 
 interface Student {
   id: string;
@@ -49,13 +51,36 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
   const [availableStudents, setAvailableStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (assignment) {
       setEditedAssignment({ ...assignment });
+      setFieldErrors({});
       loadAvailableStudents();
     }
   }, [assignment]);
+
+  const buildValidationData = (a: Assignment) => ({
+    titulo_parte: a.titulo_parte,
+    tempo_minutos: a.tempo_minutos,
+    cena: a.cena,
+    id_estudante: a.estudante?.id || "",
+    id_ajudante: a.ajudante?.id || "",
+  });
+
+  const validateField = (field: string, next: Assignment) => {
+    const errors = getZodFieldErrorStrings(assignmentEditSchema, buildValidationData(next));
+    setFieldErrors(prev => {
+      const updated = { ...prev };
+      if (errors[field]) {
+        updated[field] = errors[field];
+      } else {
+        delete updated[field];
+      }
+      return updated;
+    });
+  };
 
   const loadAvailableStudents = async () => {
     try {
@@ -98,6 +123,18 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
 
   const handleSave = async () => {
     if (!editedAssignment) return;
+
+    // Validação Zod — mensagens específicas por campo via error.issues
+    const errors = getZodFieldErrorStrings(assignmentEditSchema, buildValidationData(editedAssignment));
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      toast({
+        title: "Verifique os Campos",
+        description: "Corrija os erros destacados antes de salvar.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
       setSaving(true);
@@ -219,14 +256,21 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
               <Input
                 id="titulo"
                 value={editedAssignment.titulo_parte}
-                onChange={(e) => setEditedAssignment(prev => prev ? {
-                  ...prev,
-                  titulo_parte: e.target.value
-                } : null)}
+                onChange={(e) => setEditedAssignment(prev => {
+                  if (!prev) return null;
+                  const next = { ...prev, titulo_parte: e.target.value };
+                  validateField('titulo_parte', next);
+                  return next;
+                })}
                 placeholder="Digite o título da parte"
+                aria-invalid={!!fieldErrors.titulo_parte}
+                className={fieldErrors.titulo_parte ? "border-red-500 focus:border-red-500" : ""}
               />
+              {fieldErrors.titulo_parte && (
+                <p className="text-xs text-red-600">{fieldErrors.titulo_parte}</p>
+              )}
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="tempo">Tempo (minutos)</Label>
               <Input
@@ -235,11 +279,18 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
                 min="1"
                 max="60"
                 value={editedAssignment.tempo_minutos}
-                onChange={(e) => setEditedAssignment(prev => prev ? {
-                  ...prev,
-                  tempo_minutos: parseInt(e.target.value) || 1
-                } : null)}
+                onChange={(e) => setEditedAssignment(prev => {
+                  if (!prev) return null;
+                  const next = { ...prev, tempo_minutos: parseInt(e.target.value) || 0 };
+                  validateField('tempo_minutos', next);
+                  return next;
+                })}
+                aria-invalid={!!fieldErrors.tempo_minutos}
+                className={fieldErrors.tempo_minutos ? "border-red-500 focus:border-red-500" : ""}
               />
+              {fieldErrors.tempo_minutos && (
+                <p className="text-xs text-red-600">{fieldErrors.tempo_minutos}</p>
+              )}
             </div>
           </div>
 
@@ -249,13 +300,20 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
             <Textarea
               id="cena"
               value={editedAssignment.cena || ''}
-              onChange={(e) => setEditedAssignment(prev => prev ? {
-                ...prev,
-                cena: e.target.value
-              } : null)}
+              onChange={(e) => setEditedAssignment(prev => {
+                if (!prev) return null;
+                const next = { ...prev, cena: e.target.value };
+                validateField('cena', next);
+                return next;
+              })}
               placeholder="Descreva o cenário ou contexto da parte"
               rows={3}
+              aria-invalid={!!fieldErrors.cena}
+              className={fieldErrors.cena ? "border-red-500 focus:border-red-500" : ""}
             />
+            {fieldErrors.cena && (
+              <p className="text-xs text-red-600">{fieldErrors.cena}</p>
+            )}
           </div>
 
           {/* Students Selection */}
@@ -268,14 +326,16 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
                 onValueChange={(value) => {
                   const student = availableStudents.find(s => s.id === value);
                   if (student) {
-                    setEditedAssignment(prev => prev ? {
-                      ...prev,
-                      estudante: student
-                    } : null);
+                    setEditedAssignment(prev => {
+                      if (!prev) return null;
+                      const next = { ...prev, estudante: student };
+                      validateField('id_estudante', next);
+                      return next;
+                    });
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className={fieldErrors.id_estudante ? "border-red-500" : ""}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -291,6 +351,9 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
                   ))}
                 </SelectContent>
               </Select>
+              {fieldErrors.id_estudante && (
+                <p className="text-xs text-red-600">{fieldErrors.id_estudante}</p>
+              )}
             </div>
 
             {/* Helper Student */}
