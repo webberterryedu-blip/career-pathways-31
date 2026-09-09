@@ -124,6 +124,18 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
   const handleSave = async () => {
     if (!editedAssignment) return;
 
+    // Validação Zod — mensagens específicas por campo via error.issues
+    const errors = getZodFieldErrorStrings(assignmentEditSchema, buildValidationData(editedAssignment));
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      toast({
+        title: "Verifique os Campos",
+        description: "Corrija os erros destacados antes de salvar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -244,14 +256,21 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
               <Input
                 id="titulo"
                 value={editedAssignment.titulo_parte}
-                onChange={(e) => setEditedAssignment(prev => prev ? {
-                  ...prev,
-                  titulo_parte: e.target.value
-                } : null)}
+                onChange={(e) => setEditedAssignment(prev => {
+                  if (!prev) return null;
+                  const next = { ...prev, titulo_parte: e.target.value };
+                  validateField('titulo_parte', next);
+                  return next;
+                })}
                 placeholder="Digite o título da parte"
+                aria-invalid={!!fieldErrors.titulo_parte}
+                className={fieldErrors.titulo_parte ? "border-red-500 focus:border-red-500" : ""}
               />
+              {fieldErrors.titulo_parte && (
+                <p className="text-xs text-red-600">{fieldErrors.titulo_parte}</p>
+              )}
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="tempo">Tempo (minutos)</Label>
               <Input
@@ -260,11 +279,18 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
                 min="1"
                 max="60"
                 value={editedAssignment.tempo_minutos}
-                onChange={(e) => setEditedAssignment(prev => prev ? {
-                  ...prev,
-                  tempo_minutos: parseInt(e.target.value) || 1
-                } : null)}
+                onChange={(e) => setEditedAssignment(prev => {
+                  if (!prev) return null;
+                  const next = { ...prev, tempo_minutos: parseInt(e.target.value) || 0 };
+                  validateField('tempo_minutos', next);
+                  return next;
+                })}
+                aria-invalid={!!fieldErrors.tempo_minutos}
+                className={fieldErrors.tempo_minutos ? "border-red-500 focus:border-red-500" : ""}
               />
+              {fieldErrors.tempo_minutos && (
+                <p className="text-xs text-red-600">{fieldErrors.tempo_minutos}</p>
+              )}
             </div>
           </div>
 
