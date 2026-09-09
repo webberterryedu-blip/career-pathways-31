@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User, Users, Clock, AlertTriangle, Save, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { assignmentEditSchema } from "@/components/forms/AssignmentFormSchema";
+import { getZodFieldErrorStrings } from "@/utils/zodFieldErrors";
 
 interface Student {
   id: string;
@@ -49,13 +51,36 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
   const [availableStudents, setAvailableStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (assignment) {
       setEditedAssignment({ ...assignment });
+      setFieldErrors({});
       loadAvailableStudents();
     }
   }, [assignment]);
+
+  const buildValidationData = (a: Assignment) => ({
+    titulo_parte: a.titulo_parte,
+    tempo_minutos: a.tempo_minutos,
+    cena: a.cena,
+    id_estudante: a.estudante?.id || "",
+    id_ajudante: a.ajudante?.id || "",
+  });
+
+  const validateField = (field: string, next: Assignment) => {
+    const errors = getZodFieldErrorStrings(assignmentEditSchema, buildValidationData(next));
+    setFieldErrors(prev => {
+      const updated = { ...prev };
+      if (errors[field]) {
+        updated[field] = errors[field];
+      } else {
+        delete updated[field];
+      }
+      return updated;
+    });
+  };
 
   const loadAvailableStudents = async () => {
     try {
