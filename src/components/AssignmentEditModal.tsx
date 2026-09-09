@@ -300,13 +300,20 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
             <Textarea
               id="cena"
               value={editedAssignment.cena || ''}
-              onChange={(e) => setEditedAssignment(prev => prev ? {
-                ...prev,
-                cena: e.target.value
-              } : null)}
+              onChange={(e) => setEditedAssignment(prev => {
+                if (!prev) return null;
+                const next = { ...prev, cena: e.target.value };
+                validateField('cena', next);
+                return next;
+              })}
               placeholder="Descreva o cenário ou contexto da parte"
               rows={3}
+              aria-invalid={!!fieldErrors.cena}
+              className={fieldErrors.cena ? "border-red-500 focus:border-red-500" : ""}
             />
+            {fieldErrors.cena && (
+              <p className="text-xs text-red-600">{fieldErrors.cena}</p>
+            )}
           </div>
 
           {/* Students Selection */}
@@ -319,14 +326,16 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
                 onValueChange={(value) => {
                   const student = availableStudents.find(s => s.id === value);
                   if (student) {
-                    setEditedAssignment(prev => prev ? {
-                      ...prev,
-                      estudante: student
-                    } : null);
+                    setEditedAssignment(prev => {
+                      if (!prev) return null;
+                      const next = { ...prev, estudante: student };
+                      validateField('id_estudante', next);
+                      return next;
+                    });
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className={fieldErrors.id_estudante ? "border-red-500" : ""}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -342,6 +351,9 @@ export const AssignmentEditModal: React.FC<AssignmentEditModalProps> = ({
                   ))}
                 </SelectContent>
               </Select>
+              {fieldErrors.id_estudante && (
+                <p className="text-xs text-red-600">{fieldErrors.id_estudante}</p>
+              )}
             </div>
 
             {/* Helper Student */}
