@@ -14,7 +14,8 @@ import {
   Download,
   Save,
   Zap,
-  Target
+  Target,
+  FileSpreadsheet
 } from "lucide-react";
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import { useEstudantes } from "@/hooks/useEstudantes";
@@ -24,6 +25,7 @@ import { useStudentContext } from "@/contexts/StudentContext";
 import { useProgramContext } from "@/contexts/ProgramContext";
 import { ProgramSelector } from "@/components/common/ProgramSelector";
 import { useAssignmentGeneration } from "@/hooks/useAssignmentGeneration";
+import { exportDesignacoesToExcel } from "@/utils/exportDesignacoes";
 
 const DesignacoesPage = () => {
   const navigate = useNavigate();
@@ -46,7 +48,8 @@ const DesignacoesPage = () => {
   
   const { 
     getActiveStudents,
-    getQualifiedStudents
+    getQualifiedStudents,
+    getStudent
   } = useStudentContext();
 
   // Use S-38 assignment generation hook
