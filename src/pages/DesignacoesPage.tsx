@@ -159,6 +159,45 @@ const DesignacoesPage = () => {
     }
   };
 
+  // Export week assignments to Excel (.xlsx)
+  const handleExportExcel = () => {
+    const weekLabel = activeProgram?.title || "semana-atual";
+    const weekAssignments = activeProgram
+      ? assignments.filter(
+          (a) => a.programId === activeProgram.id || a.weekDate === activeProgram.weekDate
+        )
+      : assignments;
+
+    if (weekAssignments.length === 0) {
+      toast({
+        title: "Nada para exportar",
+        description: "Não há designações para a semana selecionada.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const rows = weekAssignments.map((a) => {
+      const student = getStudent(a.studentId);
+      const assistant = a.assistantId ? getStudent(a.assistantId) : null;
+      return {
+        studentName: student?.nome || a.studentId,
+        assistantName: assistant?.nome || "",
+        partType: a.partType,
+        studyPoint: a.studyPoint,
+        timing: a.timing,
+        status: a.status,
+        weekDate: a.weekDate
+      };
+    });
+
+    exportDesignacoesToExcel(rows, weekLabel);
+    toast({
+      title: "✅ Excel exportado",
+      description: `${rows.length} designações exportadas para Excel.`
+    });
+  };
+
   return (
     <UnifiedLayout>
       <div className="space-y-6">
