@@ -40,7 +40,7 @@ export interface ProcessedStudentData {
   family_id?: string;
   nome: string;
   familia: string;
-  idade: number;
+  idade?: number;
   genero: Genero;
   email?: string;
   telefone?: string;
@@ -88,6 +88,7 @@ export interface ImportSummary {
   imported: number;
   errors: ValidationResult[];
   warnings: ValidationResult[];
+  validStudents?: ProcessedStudentData[];
 }
 
 // Mapping configurations
