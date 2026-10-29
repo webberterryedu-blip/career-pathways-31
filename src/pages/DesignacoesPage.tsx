@@ -208,10 +208,20 @@ const DesignacoesPage = () => {
               Gere e gerencie as designações da reunião ministerial
             </p>
           </div>
-          <Button onClick={() => navigate('/programas')} variant="outline">
-            <Settings className="w-4 h-4 mr-2" />
-            Configurar Programa
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleExportExcel}
+              variant="outline"
+              disabled={assignments.length === 0}
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Exportar Excel
+            </Button>
+            <Button onClick={() => navigate('/programas')} variant="outline">
+              <Settings className="w-4 h-4 mr-2" />
+              Configurar Programa
+            </Button>
+          </div>
         </div>
 
         {/* Program Selector */}
