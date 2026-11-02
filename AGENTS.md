@@ -2451,3 +2451,7 @@ ea9e6ab4-2c6a-4cd7-9af1-2d672513a3f3	f907f760-6e44-4ec4-a983-59f18269ece9	Rafael
 
 
 
+
+<!-- LOVABLE:BEGIN -->
+Student Excel imports use spreadsheetParser and studentImport as the active validation/persistence path; keep valid rows separate from errors and verify returned IDs before reporting success, because validation is not proof of persistence.
+<!-- LOVABLE:END -->

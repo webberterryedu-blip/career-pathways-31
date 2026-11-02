@@ -156,7 +156,7 @@ const EstudantesPage = () => {
           </Button>
           <Button variant="outline" size="sm" onClick={() => setActiveTab("import")}>
             <Upload className="w-4 h-4 mr-2" />
-            Importar
+            Importar Excel
           </Button>
           <Button size="sm" onClick={() => { setEditingEstudante(null); setActiveTab("form"); }}>
             <Plus className="w-4 h-4 mr-2" />
@@ -416,27 +416,12 @@ const EstudantesPage = () => {
 
         <TabsContent value="import" className="space-y-6">
           <div className="space-y-4">
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Sistema Aprimorado:</strong> Esta página agora integra completamente todos os recursos 
-                documentados em <code>docs/Oficial</code>, incluindo validação inteligente de 32+ colunas, 
-                análise familiar automática, e processamento completo de qualificações S-38.
-              </AlertDescription>
-            </Alert>
             <EnhancedStudentImport 
               onImportComplete={handleImportComplete} 
               onViewList={() => setActiveTab("list")} 
             />
             
-            {/* Legacy import for compatibility */}
-            <details className="mt-6">
-              <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800">
-                Mostrar sistema de importação legado (compatibilidade)
-              </summary>
-              <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-                <SpreadsheetUpload onImportComplete={handleImportComplete} onViewList={() => setActiveTab("list")} />
-              </div>
+          </div>
             </details>
           </div>
         </TabsContent>
