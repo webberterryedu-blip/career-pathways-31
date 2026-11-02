@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { saveImportedStudents } from '@/utils/studentImport';
 import {
   parseExcelFile,
   validateSpreadsheet,
@@ -21,6 +21,7 @@ export default function SpreadsheetUpload({ onImportComplete }: SpreadsheetUploa
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [validated, setValidated] = useState(false);
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,115 +42,48 @@ export default function SpreadsheetUpload({ onImportComplete }: SpreadsheetUploa
         return;
       }
       
+      setValidated(false);
       setFile(selectedFile);
       setSummary(null);
       setProgress(0);
     }
   };
 
-  const insertStudents = async (students: ProcessedStudentData[]) => {
-    const batchSize = 50;
-    let imported = 0;
-
-    for (let i = 0; i < students.length; i += batchSize) {
-      const batch = students.slice(i, i + batchSize);
-      
-      const dbRecords = batch.map(student => ({
-        nome: student.nome,
-        sobrenome: student.familia,
-        familia: student.familia,
-        idade: student.idade,
-        genero: student.genero,
-        email: student.email,
-        telefone: student.telefone,
-        data_batismo: student.data_batismo,
-        data_nascimento: student.data_nascimento,
-        privilegio: student.cargo,
-        ativo: student.ativo,
-        observacoes: student.observacoes,
-        chairman: student.chairman,
-        pray: student.pray,
-        treasures: student.treasures,
-        gems: student.gems,
-        reading: student.reading,
-        starting: student.starting,
-        following: student.following,
-        making: student.making,
-        explaining: student.explaining,
-        talk: student.talk
-      }));
-
-      const { error } = await supabase
-        .from('estudantes')
-        .insert(dbRecords);
-
-      if (error) {
-        throw error;
-      }
-
-      imported += batch.length;
-      setProgress((imported / students.length) * 100);
+  const handleValidate = async () => {
+    if (!file) return;
+    setImporting(true);
+    setValidated(false);
+    try {
+      const rows = await parseExcelFile(file);
+      if (rows.length === 0) throw new Error('A planilha está vazia');
+      const result = validateSpreadsheet(rows);
+      setSummary(result);
+      setValidated(result.invalidRows === 0 && result.validRows > 0);
+      if (result.invalidRows > 0) toast.error('Corrija as linhas indicadas antes de confirmar a importação');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao ler planilha');
+    } finally {
+      setImporting(false);
     }
-
-    return imported;
   };
 
   const handleImport = async () => {
-    if (!file) return;
-
+    if (!validated || !summary?.validStudents?.length) return;
     setImporting(true);
-    setProgress(0);
-
+    setProgress(10);
     try {
-      toast.info('Lendo arquivo...');
-      const rows = await parseExcelFile(file);
-
-      if (rows.length === 0) {
-        toast.error('Arquivo vazio ou formato inválido');
-        setImporting(false);
-        return;
-      }
-
-      toast.info('Validando dados...');
-      const validationSummary = validateSpreadsheet(rows);
-      setSummary(validationSummary);
-
-      if (validationSummary.invalidRows > 0) {
-        toast.error(
-          `Encontrados ${validationSummary.invalidRows} erros. Corrija-os antes de importar.`,
-          { duration: 5000 }
-        );
-        setImporting(false);
-        return;
-      }
-
-      toast.info('Importando estudantes...');
-      const validStudents = validationSummary.errors
-        .filter(r => r.isValid && r.data)
-        .map(r => r.data!);
-
-      const imported = await insertStudents(validStudents);
-
-      validationSummary.imported = imported;
-      setSummary(validationSummary);
-
-      toast.success(
-        `✅ Importação concluída! ${imported} estudante(s) importado(s)`,
-        { duration: 5000 }
-      );
-
+      const imported = await saveImportedStudents(summary.validStudents);
+      setSummary({ ...summary, imported });
+      setProgress(100);
+      setValidated(false);
+      toast.success(`${imported} estudante(s) salvo(s) com sucesso`);
       setFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-
+      if (fileInputRef.current) fileInputRef.current.value = '';
       onImportComplete?.();
-    } catch (error: any) {
-      console.error('Import error:', error);
-      toast.error(`Erro na importação: ${error.message}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar estudantes');
     } finally {
       setImporting(false);
-      setProgress(0);
     }
   };
 
@@ -172,7 +106,7 @@ export default function SpreadsheetUpload({ onImportComplete }: SpreadsheetUploa
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <input
             ref={fileInputRef}
             type="file"
@@ -190,16 +124,28 @@ export default function SpreadsheetUpload({ onImportComplete }: SpreadsheetUploa
             Selecionar Arquivo
           </Button>
           {file && (
-            <span className="text-sm text-muted-foreground">
+            <span className="min-w-0 break-all text-sm text-muted-foreground">
               {file.name}
             </span>
           )}
         </div>
 
         {file && !importing && (
-          <Button onClick={handleImport} className="w-full">
-            Importar Estudantes
+          <Button onClick={handleValidate} className="w-full" variant="outline">
+            Validar Planilha
           </Button>
+        )}
+
+        {validated && summary && !importing && (
+          <div className="space-y-3">
+            <div className="max-h-64 overflow-auto border rounded-md">
+              <table className="w-full text-sm">
+                <thead className="bg-muted"><tr><th className="p-2 text-left">Nome</th><th className="p-2 text-left">Família</th><th className="p-2 text-left">Gênero</th><th className="p-2 text-left">Status</th></tr></thead>
+                <tbody>{summary.validStudents?.slice(0, 20).map((student, index) => <tr key={index} className="border-t"><td className="p-2">{student.nome}</td><td className="p-2">{student.familia}</td><td className="p-2">{student.genero}</td><td className="p-2">{student.ativo ? 'Ativo' : 'Inativo'}</td></tr>)}</tbody>
+              </table>
+            </div>
+            <Button onClick={handleImport} className="w-full">Confirmar importação de {summary.validRows} estudante(s)</Button>
+          </div>
         )}
 
         {importing && (
@@ -214,12 +160,12 @@ export default function SpreadsheetUpload({ onImportComplete }: SpreadsheetUploa
         {summary && !importing && (
           <div className="space-y-4">
             {summary.imported > 0 && (
-              <Alert className="border-green-500 bg-green-50">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <AlertTitle className="text-green-800">
+              <Alert>
+                <CheckCircle2 className="h-4 w-4 text-foreground" />
+                <AlertTitle className="text-foreground">
                   Importação Concluída
                 </AlertTitle>
-                <AlertDescription className="text-green-700">
+                <AlertDescription className="text-foreground">
                   {summary.imported} estudante(s) importado(s) com sucesso
                 </AlertDescription>
               </Alert>
@@ -233,7 +179,7 @@ export default function SpreadsheetUpload({ onImportComplete }: SpreadsheetUploa
                 </AlertTitle>
                 <AlertDescription>
                   <div className="mt-2 space-y-1">
-                    {summary.errors.slice(0, 5).map((error, idx) => (
+                    {summary.errors.filter(result => !result.isValid).slice(0, 5).map((error, idx) => (
                       <div key={idx} className="text-sm">
                         <strong>Linha {error.rowIndex}:</strong>{' '}
                         {error.errors.join(', ')}
@@ -259,12 +205,12 @@ export default function SpreadsheetUpload({ onImportComplete }: SpreadsheetUploa
             )}
 
             {summary.warnings.length > 0 && summary.invalidRows === 0 && (
-              <Alert className="border-yellow-500 bg-yellow-50">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <AlertTitle className="text-yellow-800">
+              <Alert>
+                <AlertTriangle className="h-4 w-4 text-foreground" />
+                <AlertTitle className="text-foreground">
                   Avisos ({summary.warnings.length})
                 </AlertTitle>
-                <AlertDescription className="text-yellow-700">
+                <AlertDescription className="text-foreground">
                   <div className="mt-2 space-y-1">
                     {summary.warnings.slice(0, 3).map((warning, idx) => (
                       <div key={idx} className="text-sm">
@@ -288,13 +234,13 @@ export default function SpreadsheetUpload({ onImportComplete }: SpreadsheetUploa
                 <div className="text-xs text-muted-foreground">Total</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-foreground">
                   {summary.validRows}
                 </div>
                 <div className="text-xs text-muted-foreground">Válidos</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
+                <div className="text-2xl font-bold text-foreground">
                   {summary.invalidRows}
                 </div>
                 <div className="text-xs text-muted-foreground">Inválidos</div>
@@ -305,8 +251,8 @@ export default function SpreadsheetUpload({ onImportComplete }: SpreadsheetUploa
 
         <Alert>
           <AlertDescription className="text-xs">
-            <strong>Formato esperado:</strong> Colunas obrigatórias - nome, familia, idade, genero, cargo, ativo.
-            Opcionais - email, telefone, data_batismo, observacoes, privilégios (chairman, pray, treasures, etc.)
+            <strong>Formato esperado:</strong> Colunas obrigatórias - nome, familia e genero.
+            Opcionais - idade, cargo, ativo, email, telefone, data_batismo, observacoes, privilégios (chairman, pray, treasures, etc.)
           </AlertDescription>
         </Alert>
       </CardContent>
