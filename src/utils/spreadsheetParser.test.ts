@@ -29,7 +29,7 @@ describe('Importação de estudantes reais', () => {
     expect(result.validStudents?.[0]).toMatchObject({ data_nascimento: '2000-08-24', genero: 'feminino', starting: true, reading: false });
   });
   it('rejeita idades fracionárias e datas impossíveis', () => {
-    expect(processRow({ ...student, idade: '26anos' }, 2).isValid).toBe(false);
+    expect(processRow({ ...student, idade: 26.5 }, 2).isValid).toBe(false);
     expect(processRow({ ...student, data_nascimento: '31/02/2000' }, 2).isValid).toBe(false);
   });
 });

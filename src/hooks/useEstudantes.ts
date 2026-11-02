@@ -35,8 +35,7 @@ export function useEstudantes() {
         .select(`
           *,
           profiles!left (id, nome, email, telefone, cargo, role)
-        `)
-        .eq('ativo', true);
+        `);
 
       if (estudantesError) {
         console.error('Error fetching estudantes:', estudantesError);
@@ -56,6 +55,7 @@ export function useEstudantes() {
         const profileData = estudante.profiles || {};
         
         return {
+          ...estudante,
           id: estudante.id,
           nome: estudante.nome || profileData.nome || 'Nome não informado',
           genero: estudante.genero,

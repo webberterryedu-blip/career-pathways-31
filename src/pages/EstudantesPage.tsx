@@ -422,8 +422,6 @@ const EstudantesPage = () => {
             />
             
           </div>
-            </details>
-          </div>
         </TabsContent>
 
 
